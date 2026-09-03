@@ -14,14 +14,12 @@ async function handleFormSubmit(event) {
 
         console.log("Signup successful:", response.data);
 
-        // Reset form after successful signup
         event.target.reset();
 
     } catch (error) {
         if (error.response && error.response.status === 403) {
             console.log("User already exists");
 
-            // Reset form if user already exists
             event.target.reset();
 
         
@@ -30,3 +28,31 @@ async function handleFormSubmit(event) {
         }
     }
 }
+
+
+const LOGIN_URL = "/users/login";
+
+async function handleLogin(event) {
+    event.preventDefault();
+
+    const email = event.target.email.value;
+    const password = event.target.password.value;
+
+    const obj = {
+        email,
+        password
+    };
+
+    try {
+        const response = await axios.post(LOGIN_URL, obj);
+
+        console.log("Login successful:", response.data);
+        event.target.reset();
+
+    } catch (error) {
+        console.error("Login failed:", error);
+
+        event.target.reset();
+    }
+}
+
