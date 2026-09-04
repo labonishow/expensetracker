@@ -1,7 +1,6 @@
 const User = require("../models/User");
 
 const signup = async (req, res) => {
-
   try {
     const { name, email, password } = req.body;
 
@@ -23,12 +22,10 @@ const signup = async (req, res) => {
       });
     }
 
-
-
     const user = await User.create({
       name,
       email,
-      password
+      password,
     });
 
     return res.status(201).json({
@@ -48,56 +45,46 @@ const signup = async (req, res) => {
   }
 };
 
-
 const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-        
-        const user = await User.findOne({
-            where: {
-                email: email
-            }
-        });
+    const user = await User.findOne({
+      where: {
+        email: email,
+      },
+    });
 
-        
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found"
-            });
-        }
-
-        
-        const isPasswordCorrect = password === user.password;
-
-        
-        if (!isPasswordCorrect) {
-            return res.status(401).json({
-                success: false,
-                message: "Password not found"
-            });
-        }
-
-        
-        return res.status(200).json({
-            success: true,
-            message: "Login successful",
-            user: {
-                id: user.id,
-                email: user.email
-            }
-        });
-
-    } catch (error) {
-        console.error(error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
+
+    const isPasswordCorrect = password === user.password;
+
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authorized",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User login successful",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
 };
 module.exports = {
-  signup,login
+  signup,
+  login,
 };

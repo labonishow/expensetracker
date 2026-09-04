@@ -49,10 +49,13 @@ async function handleLogin(event) {
         console.log("Login successful:", response.data);
         event.target.reset();
 
-    } catch (error) {
-        console.error("Login failed:", error);
+    }catch (error) {
+    console.log(JSON.stringify(error));
 
-        event.target.reset();
-    }
+    document.getElementById("loginError").innerHTML =
+        `<div style="color:red; ">${error.message}</div>`;
+
+    event.target.reset();
+}
 }
 
