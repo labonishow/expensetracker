@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const bcrypt = require("bcrypt");
 
 const signup = async (req, res) => {
   try {
@@ -9,7 +10,6 @@ const signup = async (req, res) => {
         message: "Name, email and password are required",
       });
     }
-
     const existingUser = await User.findOne({
       where: {
         email: email,
@@ -21,20 +21,18 @@ const signup = async (req, res) => {
         message: "User already exists",
       });
     }
+    const salt = 10;
 
-    const user = await User.create({
-      name,
-      email,
-      password,
-    });
+    bcrypt.hash(password, salt, async (err, hash) => {
+      await User.create({
+        name,
+        email,
+        password: hash,
+      });
 
-    return res.status(201).json({
-      message: "User registered successfully",
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
+      return res.status(201).json({
+        message: "User registered successfully",
+      });
     });
   } catch (error) {
     console.error(error);
@@ -49,31 +47,37 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({
+    const user = await User.findAll({
       where: {
         email: email,
       },
     });
-
-    if (!user) {
+    if (user.length === 0) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
 
-    const isPasswordCorrect = password === user.password;
+    bcrypt.compare(password, user[0].password, (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: "Password comparison failed",
+        });
+      }
 
-    if (!isPasswordCorrect) {
-      return res.status(401).json({
-        success: false,
-        message: "User not authorized",
+      if (!result) {
+        return res.status(401).json({
+          success: false,
+          message: "User not authorized",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "User login successful",
       });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "User login successful",
     });
   } catch (error) {
     console.error(error);
