@@ -33,29 +33,62 @@ async function handleFormSubmit(event) {
 const LOGIN_URL = "/users/login";
 
 async function handleLogin(event) {
-    event.preventDefault();
+event.preventDefault();
 
-    const email = event.target.email.value;
-    const password = event.target.password.value;
 
-    const obj = {
-        email,
-        password
-    };
+const email = event.target.email.value.trim();
+const password = event.target.password.value;
 
-    try {
-        const response = await axios.post(LOGIN_URL, obj);
+const obj = {
+    email,
+    password
+};
 
-        console.log("Login successful:", response.data);
+try {
+
+    const response = await axios.post(LOGIN_URL, obj);
+
+    console.log("Login successful:", response.data);
+
+    if (response.data.success) {
+
+        
+        localStorage.setItem("token", response.data.token);
+
+        console.log(
+            "Token saved:",
+            localStorage.getItem("token")
+        );
+
+    
         event.target.reset();
 
-    }catch (error) {
-    console.log(JSON.stringify(error));
+        window.location.href = "expense.html";
+
+    } else {
+
+        document.getElementById("loginError").innerHTML =
+            `<div style="color:red;">
+                ${response.data.message}
+            </div>`;
+    }
+
+} catch (error) {
+
+    console.error(
+        "Login failed:",
+        error.response?.data || error.message
+    );
 
     document.getElementById("loginError").innerHTML =
-        `<div style="color:red; ">${error.message}</div>`;
+        `<div style="color:red;">
+            ${error.response?.data?.message || error.message}
+        </div>`;
 
     event.target.reset();
 }
+
+
 }
+
 

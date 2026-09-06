@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Tracker</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" href="expense.css" />
+  </head>
+  <body>
+    <div class="page-wrap">
+      <div class="tracker-card">
+        <div class="tracker-header">
+          <h1>My expenses</h1>
+        </div>
+
+        <div id="expenses-list" class="expenses-list">
+          <p id="empty-state" class="empty-state">
+            No expenses yet. Tap + to add one.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="fab"
+      data-bs-toggle="modal"
+      data-bs-target="#addTransactionModal"
+      title="Add transaction"
+    >
+      <i class="bi bi-plus-lg"></i>
+    </button>
+
+    <div
+      class="modal fade"
+      id="addTransactionModal"
+      tabindex="-1"
+      aria-labelledby="addTransactionLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addTransactionLabel">Add Expense</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <form id="transaction-form" onsubmit="handleExpenseForm(event)">
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="amount" class="field-label"
+                  >Choose Expense Amount ($)</label
+                >
+                <input
+                  type="number"
+                  id="amount"
+                  class="field-input"
+                  placeholder="Enter amount"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="description" class="field-label"
+                  >Choose Description</label
+                >
+                <input
+                  type="text"
+                  id="description"
+                  class="field-input"
+                  placeholder="Enter description"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="category" class="field-label"
+                  >Choose Category</label
+                >
+                <select id="category" class="field-input" required>
+                  <option value="" disabled selected>Select Category</option>
+                  <option value="Food">Food</option>
+                  <option value="Petrol">Petrol</option>
+                  <option value="Salary">Salary</option>
+                  <option value="Rent">Rent</option>
+                  <option value="Shopping">Shopping</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Health">Health</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div class="row g-2">
+                <div class="col">
+                  <button
+                    type="submit"
+                    id="add-expense-btn"
+                    class="btn-action btn-expense w-100"
+                  >
+                    Add Expense
+                  </button>
+                </div>
+              </div>
+
+              <div id="form-message" class="form-message"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script src="
+https://cdn.jsdelivr.net/npm/axios@1.20.0/dist/axios.min.js
+"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+    <script src="expense.js"></script>
+  </body>
+</html>
