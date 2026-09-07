@@ -1,45 +1,53 @@
 let leaderboardModalInstance;
 
 document.addEventListener('DOMContentLoaded', () => {
-  const leaderboardModalEl = document.getElementById('leaderboardModal');
-  if (leaderboardModalEl) {
-    leaderboardModalInstance = new bootstrap.Modal(leaderboardModalEl);
+  const modalEl = document.getElementById('leaderboardModal');
+  const btn = document.getElementById('leaderboard-btn');
+
+  if (modalEl) {
+    leaderboardModalInstance = new bootstrap.Modal(modalEl);
   }
 
-  const btn = document.getElementById('leaderboard-btn');
   if (btn) {
     btn.addEventListener('click', handleLeaderboardClick);
   }
 });
 
 async function handleLeaderboardClick() {
-  if (window.isPremiumUser !== true) {
-    return;
-  }
+  if (window.isPremiumUser !== true) return;
 
   const token = localStorage.getItem('token');
+
   leaderboardModalInstance.show();
   await loadLeaderboard(token);
 }
 
 async function loadLeaderboard(token) {
   const listEl = document.getElementById('leaderboard-list');
+
   setLoading(listEl);
 
   try {
     const response = await axios.get('/premium/showleaderboard', {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
-    const users = response.data && response.data.data ? response.data.data : [];
+
+    const users = response.data?.data || [];
     renderLeaderboard(users);
+
   } catch (error) {
-    if (error.response && error.response.status === 403) {
+    if (error.response?.status === 403) {
       leaderboardModalInstance.hide();
       window.isPremiumUser = false;
+
       const btn = document.getElementById('leaderboard-btn');
       if (btn) btn.disabled = true;
+
       return;
     }
+
     console.error('Failed to load leaderboard:', error);
     setError(listEl);
   }
@@ -47,9 +55,10 @@ async function loadLeaderboard(token) {
 
 function renderLeaderboard(users) {
   const listEl = document.getElementById('leaderboard-list');
+
   listEl.innerHTML = '';
 
-  if (!users || users.length === 0) {
+  if (users.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'empty-state';
     empty.textContent = 'No expenses recorded yet.';
@@ -70,17 +79,16 @@ function buildLeaderboardRow(user, rank) {
   rankEl.className = 'lb-rank';
   rankEl.textContent = `#${rank}`;
 
-
   const nameEl = document.createElement('span');
   nameEl.className = 'lb-name';
   nameEl.textContent = user.name || 'Unknown user';
 
   const totalEl = document.createElement('span');
   totalEl.className = 'lb-total';
-  const total = Number(user.totalExpense) || 0;
-  totalEl.textContent = `$${total.toFixed(2)}`;
+  totalEl.textContent = `$${(Number(user.totalExpense) || 0).toFixed(2)}`;
 
   row.append(rankEl, nameEl, totalEl);
+
   return row;
 }
 
@@ -89,5 +97,6 @@ function setLoading(listEl) {
 }
 
 function setError(listEl) {
-  listEl.innerHTML = '<p class="empty-state">Could not load leaderboard. Please try again.</p>';
+  listEl.innerHTML =
+    '<p class="empty-state">Could not load leaderboard. Please try again.</p>';
 }

@@ -2,13 +2,10 @@ const cashfree = Cashfree({
   mode: "sandbox",
 });
 
-// Shared flag other scripts (e.g. leaderboard.js) can check without an
-// extra network call. This is only a UX shortcut — the real enforcement
-// happens on the backend, since this can be stale or tampered with.
+
 window.isPremiumUser = false;
 
-// Keeps the fixed header's offset in sync with its real rendered height,
-// since the premium banner can appear/disappear and change that height.
+
 function syncHeaderHeight() {
   const header = document.querySelector(".tracker-header");
   if (header) {
@@ -19,7 +16,7 @@ function syncHeaderHeight() {
   }
 }
 
-// Single source of truth for reflecting premium status in the UI.
+
 function showPremiumUI(isPremium, name) {
   window.isPremiumUser = isPremium;
 
@@ -43,9 +40,6 @@ function showPremiumUI(isPremium, name) {
 
 syncHeaderHeight();
 }
-// Asks the backend (source of truth in the DB) whether the current user
-// is premium. Runs on every page load / after login, so the banner
-// survives refreshes and re-logins instead of relying on local state.
 async function checkPremiumStatus() {
   const token = localStorage.getItem("token");
   if (!token) return;
