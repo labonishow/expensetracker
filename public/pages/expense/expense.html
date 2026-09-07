@@ -23,21 +23,34 @@
       <div class="tracker-card">
         <div class="tracker-header">
           <div class="tracker-header-top">
-            <h1>My expenses</h1>
+            <div class="header-actions">
+              <button
+                type="button"
+                id="premium-btn"
+                class="premium-btn"
+                title="Buy Premium Membership"
+              >
+                <i class="bi bi-gem"></i>
+                <span id="premium-btn-label">Buy Premium</span>
+              </button>
 
-            <button
-              type="button"
-              id="premium-btn"
-              class="premium-btn"
-              title="Buy Premium Membership"
-            >
-              <i class="bi bi-gem"></i>
-              <span id="premium-btn-label">Buy Premium</span>
-            </button>
+              <button
+                type="button"
+                id="leaderboard-btn"
+                class="leaderboard-btn"
+                title="View Leaderboard"
+                data-bs-toggle="modal"
+                data-bs-target="#leaderboardModal"
+              >
+                <i class="bi bi-trophy-fill"></i>
+                <span>Leaderboard</span>
+              </button>
+            </div>
           </div>
         </div>
 
         <div id="expenses-list" class="expenses-list">
+          <h1>Expenses</h1>
           <p id="empty-state" class="empty-state">
             No expenses yet. Tap + to add one.
           </p>
@@ -139,6 +152,37 @@
         </div>
       </div>
     </div>
+
+    <!-- Leaderboard Modal -->
+    <div
+      class="modal fade"
+      id="leaderboardModal"
+      tabindex="-1"
+      aria-labelledby="leaderboardModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="leaderboardModalLabel">
+              <i class="bi bi-trophy-fill"></i> Expense Leaderboard
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div id="leaderboard-list" class="leaderboard-list">
+              <p class="empty-state">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="
 https://cdn.jsdelivr.net/npm/axios@1.20.0/dist/axios.min.js
 "></script>
@@ -149,5 +193,6 @@ https://cdn.jsdelivr.net/npm/axios@1.20.0/dist/axios.min.js
     ></script>
     <script src="expense.js"></script>
     <script src="premium.js"></script>
+    <script src="leaderboard.js"></script>
   </body>
 </html>

@@ -6,6 +6,7 @@ const sequelize = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
 const expenseRoutes = require("./routes/expressRoutes")
 const paymentRoutes = require("./routes/paymentRoutes");
+const leaderboardRoutes = require("./routes/leaderboardRoutes")
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/users", authRoutes);
 app.use("/expense", expenseRoutes);
 app.use("/payment", paymentRoutes);
+app.use("/premium", leaderboardRoutes);
 
 
 app.use(

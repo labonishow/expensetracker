@@ -20,6 +20,15 @@ body {
     align-items: flex-start;
     justify-content: center;
     padding: 40px 16px;
+    /* Room for the fixed header so content doesn't start underneath it */
+    padding-top: 130px;
+}
+
+@media (max-width: 575px) {
+    /* Header grows taller on mobile since the buttons wrap below the title */
+    .page-wrap {
+        padding-top: 200px;
+    }
 }
 
 .tracker-card {
@@ -37,31 +46,34 @@ body {
     background: linear-gradient(120deg, #4f5fd6 0%, #8b5cf6 100%);
     color: #fff;
     text-align: center;
-    padding: 34px 20px 26px;
+    padding: 30px 30px 30px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1020;
+    box-shadow: 0 8px 20px -8px rgba(30, 20, 60, 0.5);
 }
 
-.tracker-header-top {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
 
-.tracker-header h1 {
-    margin: 0 0 6px;
-    font-size: 1.9rem;
-    font-weight: 700;
-}
 
-.premium-btn {
+
+
+/* Wraps both header buttons in the top-right corner */
+.header-actions {
     position: absolute;
     top: 0;
     right: 0;
     display: flex;
     align-items: center;
+    gap: 10px;
+}
+
+.premium-btn,
+.leaderboard-btn {
+    display: flex;
+    align-items: center;
     gap: 6px;
-    background: linear-gradient(120deg, #f5b942 0%, #f0932b 100%);
-    color: #fff;
     border: none;
     border-radius: 999px;
     padding: 8px 16px;
@@ -69,16 +81,29 @@ body {
     font-weight: 600;
     font-family: 'Poppins', sans-serif;
     cursor: pointer;
-    box-shadow: 0 8px 18px -6px rgba(240, 147, 43, 0.6);
+    color: #fff;
     transition: transform 0.12s ease, filter 0.15s ease;
     white-space: nowrap;
+    margin-top: 10px;
 }
 
-.premium-btn:hover {
+.premium-btn {
+    background: linear-gradient(120deg, #f5b942 0%, #f0932b 100%);
+    box-shadow: 0 8px 18px -6px rgba(240, 147, 43, 0.6);
+}
+
+.leaderboard-btn {
+    background: linear-gradient(120deg, #22c55e 0%, #0ea5e9 100%);
+    box-shadow: 0 8px 18px -6px rgba(14, 165, 233, 0.6);
+}
+
+.premium-btn:hover,
+.leaderboard-btn:hover {
     filter: brightness(1.06);
 }
 
-.premium-btn:active {
+.premium-btn:active,
+.leaderboard-btn:active {
     transform: scale(0.96);
 }
 
@@ -93,10 +118,12 @@ body {
 }
 
 @media (max-width: 575px) {
-    .premium-btn {
+    .header-actions {
         position: static;
         margin-top: 14px;
         align-self: center;
+        justify-content: center;
+        flex-wrap: wrap;
     }
 
     .tracker-header-top {
@@ -109,7 +136,10 @@ body {
 .expenses-list {
     padding: 24px 0 30px;
 }
-
+.expenses-list h1{
+    display: flex;
+    justify-content: center;
+}
 .empty-state {
     text-align: center;
     color: #9aa0ab;
@@ -260,6 +290,43 @@ body {
     min-height: 1.2em;
     font-size: 0.82rem;
     margin-top: 10px;
+}
+
+/* Leaderboard list */
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.leaderboard-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #f8f8fb;
+    border-radius: 10px;
+    padding: 12px 16px;
+}
+
+.leaderboard-row:nth-child(1) {
+    background: linear-gradient(120deg, #fff7e0, #ffe9b3);
+}
+
+.lb-rank {
+    font-weight: 700;
+    color: #6b7280;
+    width: 32px;
+}
+
+.lb-name {
+    flex: 1;
+    font-weight: 500;
+    color: #1f2333;
+}
+
+.lb-total {
+    font-weight: 700;
+    color: #dc3545;
 }
 
 
