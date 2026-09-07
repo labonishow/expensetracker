@@ -1,102 +1,72 @@
-let leaderboardModalInstance;
+let leaderboardModal;
+let leaderboardList;
+let leaderboardBtn;
 
-document.addEventListener('DOMContentLoaded', () => {
-  const modalEl = document.getElementById('leaderboardModal');
-  const btn = document.getElementById('leaderboard-btn');
+document.addEventListener("DOMContentLoaded", () => {
 
-  if (modalEl) {
-    leaderboardModalInstance = new bootstrap.Modal(modalEl);
-  }
+    leaderboardModal = new bootstrap.Modal(
+        document.getElementById("leaderboardModal")
+    );
 
-  if (btn) {
-    btn.addEventListener('click', handleLeaderboardClick);
-  }
+    leaderboardList = document.getElementById("leaderboard-list");
+    leaderboardBtn = document.getElementById("leaderboard-btn");
+
+    leaderboardBtn?.addEventListener("click", handleLeaderboardClick);
 });
 
+
 async function handleLeaderboardClick() {
-  if (window.isPremiumUser !== true) return;
 
-  const token = localStorage.getItem('token');
+    if (window.isPremiumUser !== true) return;
 
-  leaderboardModalInstance.show();
-  await loadLeaderboard(token);
-}
+    const token = localStorage.getItem("token");
 
-async function loadLeaderboard(token) {
-  const listEl = document.getElementById('leaderboard-list');
+    leaderboardModal.show();
 
-  setLoading(listEl);
+    leaderboardList.innerHTML =
+        '<p class="empty-state">Loading leaderboard...</p>';
 
-  try {
-    const response = await axios.get('/premium/showleaderboard', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
 
-    const users = response.data?.data || [];
-    renderLeaderboard(users);
+        const { data } = await axios.get(
+            "/premium/showleaderboard",
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
 
-  } catch (error) {
-    if (error.response?.status === 403) {
-      leaderboardModalInstance.hide();
-      window.isPremiumUser = false;
+        const users = data?.data || [];
 
-      const btn = document.getElementById('leaderboard-btn');
-      if (btn) btn.disabled = true;
+        if (!users.length) {
+            leaderboardList.innerHTML =
+                '<p class="empty-state">No expenses recorded yet.</p>';
+            return;
+        }
 
-      return;
+        leaderboardList.innerHTML = users.map((user, index) => `
+            <div class="leaderboard-row" data-user-id="${user.userId}">
+                <span class="lb-rank">#${index + 1}</span>
+                <span class="lb-name">${user.name || "Unknown user"}</span>
+                <span class="lb-total">
+                    $${(Number(user.totalExpense) || 0).toFixed(2)}
+                </span>
+            </div>
+        `).join("");
+
+    } catch (error) {
+
+        if (error.response?.status === 403) {
+            leaderboardModal.hide();
+            window.isPremiumUser = false;
+            leaderboardBtn.disabled = true;
+            return;
+        }
+
+        console.error("Failed to load leaderboard:", error);
+
+        leaderboardList.innerHTML =
+            '<p class="empty-state">Could not load leaderboard. Please try again.</p>';
     }
-
-    console.error('Failed to load leaderboard:', error);
-    setError(listEl);
-  }
-}
-
-function renderLeaderboard(users) {
-  const listEl = document.getElementById('leaderboard-list');
-
-  listEl.innerHTML = '';
-
-  if (users.length === 0) {
-    const empty = document.createElement('p');
-    empty.className = 'empty-state';
-    empty.textContent = 'No expenses recorded yet.';
-    listEl.appendChild(empty);
-    return;
-  }
-
-  users.forEach((user, index) => {
-    listEl.appendChild(buildLeaderboardRow(user, index + 1));
-  });
-}
-
-function buildLeaderboardRow(user, rank) {
-  const row = document.createElement('div');
-  row.className = 'leaderboard-row';
-
-  const rankEl = document.createElement('span');
-  rankEl.className = 'lb-rank';
-  rankEl.textContent = `#${rank}`;
-
-  const nameEl = document.createElement('span');
-  nameEl.className = 'lb-name';
-  nameEl.textContent = user.name || 'Unknown user';
-
-  const totalEl = document.createElement('span');
-  totalEl.className = 'lb-total';
-  totalEl.textContent = `$${(Number(user.totalExpense) || 0).toFixed(2)}`;
-
-  row.append(rankEl, nameEl, totalEl);
-
-  return row;
-}
-
-function setLoading(listEl) {
-  listEl.innerHTML = '<p class="empty-state">Loading leaderboard...</p>';
-}
-
-function setError(listEl) {
-  listEl.innerHTML =
-    '<p class="empty-state">Could not load leaderboard. Please try again.</p>';
 }

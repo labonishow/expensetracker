@@ -1,7 +1,8 @@
 const Expense = require("../models/expenseModel");
+const User = require("../models/User");
 
 
-
+// CREATE EXPENSE
 const createExpense = async (req, res) => {
     try {
         const { amount, description, category } = req.body;
@@ -12,6 +13,18 @@ const createExpense = async (req, res) => {
             category,
             userId: req.user.id
         });
+
+        // Add expense amount to user's totalExpense
+        await User.increment(
+            {
+                totalExpense: amount
+            },
+            {
+                where: {
+                    id: req.user.id
+                }
+            }
+        );
 
         res.status(201).json({
             success: true,
@@ -31,7 +44,7 @@ const createExpense = async (req, res) => {
 };
 
 
-
+// GET EXPENSES
 const getExpenses = async (req, res) => {
     try {
         const expenses = await Expense.findAll({
@@ -55,7 +68,7 @@ const getExpenses = async (req, res) => {
 };
 
 
-
+// DELETE EXPENSE
 const deleteExpense = async (req, res) => {
     try {
         const { id } = req.params;
@@ -74,6 +87,19 @@ const deleteExpense = async (req, res) => {
             });
         }
 
+        // Subtract expense amount from user's totalExpense
+        await User.increment(
+            {
+                totalExpense: -expense.amount
+            },
+            {
+                where: {
+                    id: req.user.id
+                }
+            }
+        );
+
+        // Delete expense
         await expense.destroy();
 
         res.status(200).json({

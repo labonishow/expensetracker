@@ -1,5 +1,4 @@
 const { DataTypes } = require("sequelize");
-
 const sequelize = require("../config/database");
 
 const Expense = sequelize.define("Expense", {
@@ -25,13 +24,13 @@ const Expense = sequelize.define("Expense", {
         allowNull: false,
     },
 
-   userId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-        model: "Users",
-        key: "id"
-    }
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: "users",
+            key: "id"
+        }
     },
 
 });

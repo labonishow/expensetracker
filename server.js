@@ -1,5 +1,8 @@
 require("dotenv").config();
 
+
+require("./models/associations");
+
 const express = require("express");
 const path = require("path");
 const sequelize = require("./config/database");
