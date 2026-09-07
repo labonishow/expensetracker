@@ -1,4 +1,3 @@
-
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
@@ -8,6 +7,15 @@ const Payment = sequelize.define("Payment", {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true
+    },
+
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: "users",
+            key: "id"
+        }
     },
 
     orderId: {

@@ -2,13 +2,86 @@ const cashfree = Cashfree({
   mode: "sandbox",
 });
 
+// Shared flag other scripts (e.g. leaderboard.js) can check without an
+// extra network call. This is only a UX shortcut — the real enforcement
+// happens on the backend, since this can be stale or tampered with.
+window.isPremiumUser = false;
+
+// Keeps the fixed header's offset in sync with its real rendered height,
+// since the premium banner can appear/disappear and change that height.
+function syncHeaderHeight() {
+  const header = document.querySelector(".tracker-header");
+  if (header) {
+    document.documentElement.style.setProperty(
+      "--header-h",
+      header.offsetHeight + "px"
+    );
+  }
+}
+
+// Single source of truth for reflecting premium status in the UI.
+function showPremiumUI(isPremium, name) {
+  window.isPremiumUser = isPremium;
+
+  const leaderboardBtn = document.getElementById("leaderboard-btn");
+  if (leaderboardBtn) leaderboardBtn.disabled = isPremium !== true;
+
+  const banner = document.getElementById("premium-banner");
+  const nameEl = document.getElementById("premium-user-name");
+  const btnLabel = document.getElementById("premium-btn-label");
+  const btn = document.getElementById("premium-btn");
+
+  if (banner) banner.hidden = !isPremium;
+  // textContent, not innerHTML — name is user-supplied data.
+  if (nameEl) nameEl.textContent = isPremium ? (name || "") : "";
+
+  if (isPremium) {
+  if (btn) {
+    btn.classList.add("d-none");
+  }
+}
+
+syncHeaderHeight();
+}
+// Asks the backend (source of truth in the DB) whether the current user
+// is premium. Runs on every page load / after login, so the banner
+// survives refreshes and re-logins instead of relying on local state.
+async function checkPremiumStatus() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const response = await fetch("http://localhost:3000/payment/premium-status", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) return;
+
+    const data = await response.json();
+    showPremiumUI(!!data.isPremium, data.name);
+  } catch (error) {
+    console.error("Failed to check premium status:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  syncHeaderHeight();
+  checkPremiumStatus();
+});
+window.addEventListener("resize", syncHeaderHeight);
+
 document.getElementById("premium-btn").addEventListener("click", async () => {
+  const token = localStorage.getItem("token");
+
   try {
     // 1. Create payment order from backend
     const response = await fetch("http://localhost:3000/payment/pay", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -57,6 +130,9 @@ document.getElementById("premium-btn").addEventListener("click", async () => {
         `http://localhost:3000/payment/status/${orderId}`,
         {
           method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -68,15 +144,10 @@ document.getElementById("premium-btn").addEventListener("click", async () => {
 
       console.log("Payment status:", statusData);
 
-      if (
-        statusData.orderStatus === "PAID" ||
-        statusData.orderStatus === "SUCCESS"
-      ) {
+      // The backend reports "Success" / "Pending" / "Failure"
+      if (statusData.orderStatus === "Success") {
         alert("Premium membership purchased successfully!");
-
-        // Change button after successful payment
-        document.getElementById("premium-btn-label").textContent =
-          "Premium Active";
+        await checkPremiumStatus();
       } else {
         alert(
           "Payment status: " +

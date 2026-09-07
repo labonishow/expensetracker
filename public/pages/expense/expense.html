@@ -22,6 +22,10 @@
     <div class="page-wrap">
       <div class="tracker-card">
         <div class="tracker-header">
+          <p id="premium-banner" class="premium-banner" hidden>
+            <i class="bi bi-gem"></i> Welcome <span id="premium-user-name"></span><br />
+            Thank you for being a Prime Member!
+          </p>
           <div class="tracker-header-top">
             <div class="header-actions">
               <button
@@ -39,8 +43,7 @@
                 id="leaderboard-btn"
                 class="leaderboard-btn"
                 title="View Leaderboard"
-                data-bs-toggle="modal"
-                data-bs-target="#leaderboardModal"
+                disabled
               >
                 <i class="bi bi-trophy-fill"></i>
                 <span>Leaderboard</span>

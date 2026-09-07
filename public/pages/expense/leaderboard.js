@@ -1,20 +1,45 @@
+let leaderboardModalInstance;
 
 document.addEventListener('DOMContentLoaded', () => {
   const leaderboardModalEl = document.getElementById('leaderboardModal');
-  if (!leaderboardModalEl) return;
-  leaderboardModalEl.addEventListener('show.bs.modal', loadLeaderboard);
+  if (leaderboardModalEl) {
+    leaderboardModalInstance = new bootstrap.Modal(leaderboardModalEl);
+  }
+
+  const btn = document.getElementById('leaderboard-btn');
+  if (btn) {
+    btn.addEventListener('click', handleLeaderboardClick);
+  }
 });
 
-async function loadLeaderboard() {
+async function handleLeaderboardClick() {
+  if (window.isPremiumUser !== true) {
+    return;
+  }
+
+  const token = localStorage.getItem('token');
+  leaderboardModalInstance.show();
+  await loadLeaderboard(token);
+}
+
+async function loadLeaderboard(token) {
   const listEl = document.getElementById('leaderboard-list');
   setLoading(listEl);
 
   try {
-    const response = await axios.get('/premium/showleaderboard');
-    // Backend returns { success: true, data: [{ userId, name, totalExpense }, ...] }
+    const response = await axios.get('/premium/showleaderboard', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     const users = response.data && response.data.data ? response.data.data : [];
     renderLeaderboard(users);
   } catch (error) {
+    if (error.response && error.response.status === 403) {
+      leaderboardModalInstance.hide();
+      window.isPremiumUser = false;
+      const btn = document.getElementById('leaderboard-btn');
+      if (btn) btn.disabled = true;
+      return;
+    }
     console.error('Failed to load leaderboard:', error);
     setError(listEl);
   }
@@ -45,7 +70,7 @@ function buildLeaderboardRow(user, rank) {
   rankEl.className = 'lb-rank';
   rankEl.textContent = `#${rank}`;
 
-  // Use textContent (not innerHTML) for server-provided name to avoid XSS
+
   const nameEl = document.createElement('span');
   nameEl.className = 'lb-name';
   nameEl.textContent = user.name || 'Unknown user';

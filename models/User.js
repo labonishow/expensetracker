@@ -28,6 +28,12 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+
+    isPremium: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
   },
   {
     tableName: "users",
