@@ -14,13 +14,27 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     />
+    <!-- Cashfree JavaScript SDK -->
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
     <link rel="stylesheet" href="expense.css" />
   </head>
   <body>
     <div class="page-wrap">
       <div class="tracker-card">
         <div class="tracker-header">
-          <h1>My expenses</h1>
+          <div class="tracker-header-top">
+            <h1>My expenses</h1>
+
+            <button
+              type="button"
+              id="premium-btn"
+              class="premium-btn"
+              title="Buy Premium Membership"
+            >
+              <i class="bi bi-gem"></i>
+              <span id="premium-btn-label">Buy Premium</span>
+            </button>
+          </div>
         </div>
 
         <div id="expenses-list" class="expenses-list">
@@ -134,5 +148,6 @@ https://cdn.jsdelivr.net/npm/axios@1.20.0/dist/axios.min.js
       crossorigin="anonymous"
     ></script>
     <script src="expense.js"></script>
+    <script src="premium.js"></script>
   </body>
 </html>

@@ -128,10 +128,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const token = localStorage.getItem("token");
 
-    // if (!token) {
-    //     window.location.href = "signup.html";
-    //     return;
-    // }
+    if (!token) {
+        window.location.href = "signup.html";
+        return;
+    }
 
     loadExpenses();
 });

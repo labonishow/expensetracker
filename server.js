@@ -5,6 +5,8 @@ const path = require("path");
 const sequelize = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
 const expenseRoutes = require("./routes/expressRoutes")
+const paymentRoutes = require("./routes/paymentRoutes");
+
 const app = express();
 
 
@@ -12,6 +14,9 @@ app.use(express.json());
 
 app.use("/users", authRoutes);
 app.use("/expense", expenseRoutes);
+app.use("/payment", paymentRoutes);
+
+
 app.use(
   express.static(path.join(__dirname, "public", "pages", "expense"))
 );

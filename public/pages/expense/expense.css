@@ -8,6 +8,7 @@ body {
     margin: 0;
     font-family: 'Poppins', sans-serif;
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    background:url("signup-bg.jpg") no-repeat center / cover ;
     min-height: 100vh;
 }
 
@@ -39,10 +40,68 @@ body {
     padding: 34px 20px 26px;
 }
 
+.tracker-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
 .tracker-header h1 {
     margin: 0 0 6px;
     font-size: 1.9rem;
     font-weight: 700;
+}
+
+.premium-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(120deg, #f5b942 0%, #f0932b 100%);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 8px 18px -6px rgba(240, 147, 43, 0.6);
+    transition: transform 0.12s ease, filter 0.15s ease;
+    white-space: nowrap;
+}
+
+.premium-btn:hover {
+    filter: brightness(1.06);
+}
+
+.premium-btn:active {
+    transform: scale(0.96);
+}
+
+.premium-btn:disabled {
+    cursor: default;
+    opacity: 0.85;
+}
+
+.premium-btn.is-premium {
+    background: linear-gradient(120deg, #22c55e 0%, #16a34a 100%);
+    box-shadow: 0 8px 18px -6px rgba(22, 163, 74, 0.6);
+}
+
+@media (max-width: 575px) {
+    .premium-btn {
+        position: static;
+        margin-top: 14px;
+        align-self: center;
+    }
+
+    .tracker-header-top {
+        flex-direction: column;
+    }
 }
 
 
