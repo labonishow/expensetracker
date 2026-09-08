@@ -1,6 +1,4 @@
 require("dotenv").config();
-
-
 require("./models/associations");
 
 const express = require("express");
@@ -10,7 +8,7 @@ const authRoutes = require("./routes/authRoutes");
 const expenseRoutes = require("./routes/expressRoutes")
 const paymentRoutes = require("./routes/paymentRoutes");
 const leaderboardRoutes = require("./routes/leaderboardRoutes")
-
+const aiRoutes = require("./routes/aiRoutes");
 const app = express();
 
 
@@ -20,6 +18,9 @@ app.use("/users", authRoutes);
 app.use("/expense", expenseRoutes);
 app.use("/payment", paymentRoutes);
 app.use("/premium", leaderboardRoutes);
+app.use("/ai", aiRoutes);
+
+
 
 
 app.use(

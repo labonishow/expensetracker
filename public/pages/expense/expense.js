@@ -1,4 +1,55 @@
 const expense_URL = "/expense";
+const ai_URL = "/ai/suggest-category";
+
+
+
+let categoryTouchedByUser = false;
+let suggestTimer = null;
+ 
+function setupCategorySuggestions() {
+    const descriptionInput = document.getElementById("description");
+    const categorySelect = document.getElementById("category");
+ 
+    if (!descriptionInput || !categorySelect) return;
+ 
+    categorySelect.addEventListener("input", () => {
+        categoryTouchedByUser = true;
+    });
+ 
+    descriptionInput.addEventListener("input", () => {
+        clearTimeout(suggestTimer);
+ 
+        const description = descriptionInput.value.trim();
+        if (description.length < 3) return;
+ 
+        suggestTimer = setTimeout(async () => {
+            const category = await fetchCategorySuggestion(description);
+ 
+            if (category && !categoryTouchedByUser) {
+                categorySelect.value = category;
+            }
+        }, 600);
+    });
+}
+
+async function fetchCategorySuggestion(description) {
+    const token = localStorage.getItem("token");
+ 
+    try {
+        const response = await axios.post(
+            ai_URL,
+            { description },
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+ 
+        return response.data.category;
+ 
+    } catch (error) {
+        console.log(error.message);
+        return null;
+    }
+}
+ 
 
 
 async function handleExpenseForm(event) {
@@ -26,6 +77,9 @@ async function handleExpenseForm(event) {
         showExpense(response.data.expense);
 
         event.target.reset();
+        categoryTouchedByUser = false;
+        const hint = document.getElementById("category-hint");
+        if (hint) hint.hidden = true;
 
         alert("Expense added successfully!");
 
@@ -134,4 +188,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     loadExpenses();
+    setupCategorySuggestions();
 });
