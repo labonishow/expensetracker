@@ -1,30 +1,46 @@
+const sequelize = require("../config/database");
 const Expense = require("../models/expenseModel");
 const User = require("../models/User");
 
 
 // CREATE EXPENSE
 const createExpense = async (req, res) => {
+    const t = await sequelize.transaction();
+
     try {
         const { amount, description, category } = req.body;
+        const expense = await Expense.create(
+            {
+                amount,
+                description,
+                category,
+                userId: req.user.id
+            },
+            {
+                transaction: t
+            }
+        );
 
-        const expense = await Expense.create({
-            amount,
-            description,
-            category,
-            userId: req.user.id
+        const user = await User.findByPk(req.user.id, {
+            transaction: t
         });
 
-        // Add expense amount to user's totalExpense
-        await User.increment(
+        const newTotalExpense =
+            Number(user.totalExpense) + Number(amount);
+
+        await User.update(
             {
-                totalExpense: amount
+                totalExpense: newTotalExpense
             },
             {
                 where: {
                     id: req.user.id
-                }
+                },
+                transaction: t
             }
         );
+
+        await t.commit();
 
         res.status(201).json({
             success: true,
@@ -34,6 +50,7 @@ const createExpense = async (req, res) => {
 
     } catch (error) {
         console.error(error);
+        await t.rollback();
 
         res.status(500).json({
             success: false,
@@ -70,37 +87,46 @@ const getExpenses = async (req, res) => {
 
 // DELETE EXPENSE
 const deleteExpense = async (req, res) => {
+    const t = await sequelize.transaction();
+
     try {
         const { id } = req.params;
-
         const expense = await Expense.findOne({
             where: {
                 id: id,
                 userId: req.user.id
-            }
+            },
+            transaction: t
         });
 
         if (!expense) {
+            await t.rollback();
+
             return res.status(404).json({
                 success: false,
                 message: "Expense not found"
             });
         }
-
-        // Subtract expense amount from user's totalExpense
-        await User.increment(
+        const user = await User.findByPk(req.user.id, {
+            transaction: t
+        });
+        const newTotalExpense =
+            Number(user.totalExpense) - Number(expense.amount);
+        await User.update(
             {
-                totalExpense: -expense.amount
+                totalExpense: newTotalExpense
             },
             {
                 where: {
                     id: req.user.id
-                }
+                },
+                transaction: t
             }
         );
-
-        // Delete expense
-        await expense.destroy();
+        await expense.destroy({
+            transaction: t
+        });
+        await t.commit();
 
         res.status(200).json({
             success: true,
@@ -109,6 +135,8 @@ const deleteExpense = async (req, res) => {
 
     } catch (error) {
         console.error(error);
+
+        await t.rollback();
 
         res.status(500).json({
             success: false,

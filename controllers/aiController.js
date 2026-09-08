@@ -19,7 +19,7 @@ async function callGemini(prompt) {
 
 const getCategorySuggestion = async (req, res) => {
     try {
-        const { description } = req.body;
+        const { description } = req.query;
 
         if (!description) {
             return res.status(400).json({ success: false, message: "Description is required" });
@@ -31,6 +31,7 @@ const getCategorySuggestion = async (req, res) => {
         try {
             response = await callGemini(prompt);
         } catch (err) {
+            
             if (err.status === 503) {
                 await new Promise((resolve) => setTimeout(resolve, 800));
                 response = await callGemini(prompt);
