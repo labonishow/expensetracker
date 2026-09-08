@@ -7,6 +7,7 @@ body{
     min-height: 100vh;
     font-family: 'jost',sans-serif;
     background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+    
 
 }
 
@@ -86,7 +87,7 @@ button:hover{
 }
 
 #chk:checked ~ .login {
-    transform: translateY(-500px);
+    transform: translateY(-600px);
 }
 
 #chk:checked ~ .login label {
@@ -95,4 +96,39 @@ button:hover{
 
 #chk:checked ~ .signup label {
     transform: scale(0.6);
+}
+
+#forgotPasswordBtn {
+    width: auto;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    padding: 0;
+    background: none;
+    color: #573b8a;
+    font-size: 0.8em;
+    font-weight: normal;
+    text-decoration: underline;
+}
+
+#forgotPasswordBtn:hover {
+    background: none;
+    color: #6d44b8;
+}
+
+#forgotPasswordForm {
+    width: 100%;
+}
+
+#forgotPasswordForm input,
+#forgotPasswordForm button {
+    width: 60%;
+    height: 34px;
+    margin: 10px auto;
+}
+
+#forgotPasswordMessage {
+    text-align: center;
+    font-size: 0.75em;
+    margin: 5px 20px;
 }

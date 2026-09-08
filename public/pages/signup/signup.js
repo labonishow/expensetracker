@@ -92,3 +92,31 @@ try {
 }
 
 
+const FORGOT_PASSWORD_URL = "/password/forgotpassword";
+
+document.getElementById("forgotPasswordBtn").addEventListener("click", () => {
+    const form = document.getElementById("forgotPasswordForm");
+    form.style.display = form.style.display === "none" ? "block" : "none";
+});
+
+async function handleForgotPassword(event) {
+    event.preventDefault();
+
+    const email = event.target.email.value.trim();
+    const messageEl = document.getElementById("forgotPasswordMessage");
+
+    try {
+        const response = await axios.post(FORGOT_PASSWORD_URL, { email });
+
+        messageEl.style.color = "green";
+        messageEl.textContent = response.data.message;
+
+        event.target.reset();
+
+    } catch (error) {
+        console.error("Forgot password failed:", error.response?.data || error.message);
+
+        messageEl.style.color = "red";
+        messageEl.textContent = error.response?.data?.message || "Something went wrong";
+    }
+}

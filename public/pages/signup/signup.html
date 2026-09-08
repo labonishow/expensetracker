@@ -26,6 +26,14 @@
             <input type="password" name="password" placeholder="Enter your password" required>
             <button>Login</button> 
         </form>
+        <button type="button" id="forgotPasswordBtn">Forgot Password?</button>
+        <div id="forgotPasswordForm" style="display:none;">
+            <form onsubmit="handleForgotPassword(event)">
+                <input type="email" name="email" placeholder="Enter your email" required>
+                <button type="submit">Send Reset Password</button>
+            </form>
+            <p id="forgotPasswordMessage"></p>
+        </div>
        </div>
     </div>
     <div id="loginError"></div>

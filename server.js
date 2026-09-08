@@ -9,6 +9,7 @@ const expenseRoutes = require("./routes/expressRoutes")
 const paymentRoutes = require("./routes/paymentRoutes");
 const leaderboardRoutes = require("./routes/leaderboardRoutes")
 const aiRoutes = require("./routes/aiRoutes");
+const passwordRoutes = require("./routes/passwordRoutes");
 const app = express();
 
 
@@ -19,7 +20,7 @@ app.use("/expense", expenseRoutes);
 app.use("/payment", paymentRoutes);
 app.use("/premium", leaderboardRoutes);
 app.use("/ai", aiRoutes);
-
+app.use("/password", passwordRoutes);
 
 
 
