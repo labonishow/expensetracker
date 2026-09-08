@@ -1,71 +1,260 @@
 require("dotenv").config();
 
 const SibApiV3Sdk = require("sib-api-v3-sdk");
+const bcrypt = require("bcrypt");
+const { v4: uuidv4 } = require("uuid");
 
-// Brevo client setup
+const User = require("../models/User");
+const ForgotPasswordRequests = require("../models/ForgotPasswordRequests");
+
+
 const client = SibApiV3Sdk.ApiClient.instance;
-
 const apiKey = client.authentications["api-key"];
 apiKey.apiKey = process.env.MAIL_SERVICE_API_KEY;
 
 const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
-const sender = {
-    email: "labonishowkrishnapur@gmail.com"
+const forgotPassword = async (req, res) => {
+  try {
+    const email = req.body.email?.trim();
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    // Find user
+    const user = await User.findOne({
+      where: {
+        email: email,
+      },
+    });
+
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message:
+          "If an account exists for this email, a password reset link has been sent.",
+      });
+    }
+    //generate uid
+    const requestId = uuidv4();
+    await ForgotPasswordRequests.create({
+      id: requestId,
+      userId: user.id,
+      isActive: true,
+    });
+
+    const resetUrl = `http://localhost:3000/password/resetpassword/${requestId}`;
+
+    try {
+      await tranEmailApi.sendTransacEmail({
+        sender: {
+          email: process.env.MAIL_SENDER_EMAIL,
+        },
+
+        to: [
+          {
+            email: user.email,
+          },
+        ],
+
+        subject: "Reset your Expense Tracker password",
+
+        textContent: `Hello ${user.name},
+
+We received a request to reset your Expense Tracker password.
+
+Click the link below to reset your password:
+
+${resetUrl}
+
+If you did not request a password reset, you can ignore this email.
+
+Thank you.`,
+      });
+    } catch (emailError) {
+      console.log("Email could not be sent:", emailError.message);
+
+      return res.status(200).json({
+        success: true,
+        message: "Reset request created but email could not be sent.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset email sent successfully.",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+
+    return res.status(500).json({
+      success: false,
+
+      message: "Something went wrong while creating password reset request.",
+    });
+  }
+};
+// GET /password/resetpassword/:requestId
+const showResetPasswordPage = async (req, res) => {
+  try {
+    const requestId = req.params.requestId;
+
+    // Find UUID in database
+    const request = await ForgotPasswordRequests.findOne({
+      where: {
+        id: requestId,
+        isActive: true,
+      },
+    });
+
+    // UUID doesn't exist OR already used
+    if (!request) {
+      return res.status(400).send(`
+
+                <!DOCTYPE html>
+
+                <html>
+
+                <head>
+                    <title>Invalid Reset Link</title>
+                </head>
+
+                <body>
+
+                    <h2>
+                        Invalid or expired reset link
+                    </h2>
+
+                    <p>
+                        This password reset link has already been used
+                        or does not exist.
+                    </p>
+
+                </body>
+
+                </html>
+
+            `);
+    }
+
+    // Request exists and isActive = true
+    // Show reset password form
+
+    return res.sendFile(
+      require("path").join(
+        __dirname,
+        "..",
+        "public",
+        "pages",
+        "password",
+        "resetpassword.html",
+      ),
+    );
+  } catch (error) {
+    console.error("Reset password page error:", error);
+
+    return res.status(500).send("Internal server error");
+  }
 };
 
-const forgotPassword = async (req, res) => {
-    try {
-        const { email } = req.body;
+// --------------------------------------------------
+// RESET PASSWORD
+// POST /password/resetpassword/:requestId
+// --------------------------------------------------
 
-        if (!email) {
-            return res.status(400).json({
-                success: false,
-                message: "Email is required"
-            });
-        }
+const resetPassword = async (req, res) => {
+  try {
+    const requestId = req.params.requestId;
 
-        const receivers = [
-            {
-                email: email
-            }
-        ];
+    const password = req.body.password;
 
-        await tranEmailApi.sendTransacEmail({
-            sender: sender,
-            to: receivers,
-            subject: "Password Reset Request - Expense Tracker",
-            textContent:
-                "Hi,\n\n" +
-                "We received a request to reset your password for your Expense Tracker account.\n\n" +
-                "This is a demo email confirming that your request was received.\n\n" +
-                "If you did not request this, you can safely ignore this email."
-        });
-console.log(
-    "Brevo API key loaded:",
-    !!process.env.MAIL_SERVICE_API_KEY
-);
-        return res.status(200).json({
-            success: true,
-            message: "Password reset email sent. Please check your inbox."
-        });
+    // Validate password
 
-    } catch (err) {
-    console.log("Forgot password error:");
-    console.log("Message:", err.message);
-    console.log("Response:", err.response?.body);
-    console.log("Status:", err.response?.statusCode);
-    console.log("Full error:", err);
-
-    res.status(500).json({
+    if (!password) {
+      return res.status(400).json({
         success: false,
-        message: "Failed to send email",
-        error: err.message,
-        brevoError: err.response?.body || null
+
+        message: "Password is required",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+
+        message: "Password must contain at least 6 characters",
+      });
+    }
+
+
+    // Find forgot password request
+    const request = await ForgotPasswordRequests.findOne({
+      where: {
+        id: requestId,
+        isActive: true,
+      },
     });
-}
+
+    // Request doesn't exist
+    if (!request) {
+      return res.status(400).json({
+        success: false,
+
+        message: "Invalid or already used reset link",
+      });
+    }
+
+    
+    // Find user
+    const user = await User.findByPk(request.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+
+        message: "User not found",
+      });
+    }
+
+    
+    // Encrypt password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update password
+    await user.update({
+      password: hashedPassword,
+    });
+
+ 
+    // Make reset request inactive
+
+    await request.update({
+      isActive: false,
+    });
+
+    return res.status(200).json({
+      success: true,
+
+      message:
+        "Password updated successfully. You can now login with your new password.",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+
+    return res.status(500).json({
+      success: false,
+
+      message: "Something went wrong while resetting password.",
+    });
+  }
 };
 
 module.exports = {
-    forgotPassword
+  forgotPassword,
+  showResetPasswordPage,
+  resetPassword,
 };

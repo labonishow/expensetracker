@@ -5,13 +5,13 @@ const express = require("express");
 const path = require("path");
 const sequelize = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
-const expenseRoutes = require("./routes/expressRoutes")
+const expenseRoutes = require("./routes/expressRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
-const leaderboardRoutes = require("./routes/leaderboardRoutes")
+const leaderboardRoutes = require("./routes/leaderboardRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const passwordRoutes = require("./routes/passwordRoutes");
-const app = express();
 
+const app = express();
 
 app.use(express.json());
 
@@ -22,15 +22,13 @@ app.use("/premium", leaderboardRoutes);
 app.use("/ai", aiRoutes);
 app.use("/password", passwordRoutes);
 
-
-
 app.use(
-  express.static(path.join(__dirname, "public", "pages", "expense"))
+  "/password",
+  express.static(path.join(__dirname, "public", "pages", "password")),
 );
+app.use(express.static(path.join(__dirname, "public", "pages", "expense")));
 
-app.use(
-  express.static(path.join(__dirname, "public", "pages", "signup"))
-);
+app.use(express.static(path.join(__dirname, "public", "pages", "signup")));
 
 const PORT = 3000;
 const startServer = async () => {
