@@ -83,8 +83,7 @@ function renderReport(groups, totals) {
     `;
 }
 
-// Backend hands us a downloadable URL - opening it is enough, the
-// Content-Disposition header makes the browser download it automatically.
+
 function downloadReport() {
     if (!window.isPremiumUser) return;
 

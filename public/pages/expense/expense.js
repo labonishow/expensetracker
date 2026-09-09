@@ -2,66 +2,179 @@ const expense_URL = "/expense";
 const ai_URL = "/ai/suggest-category";
 
 
+
+
+const PAGE_SIZE_STORAGE_KEY = "expensePageSize";
+const CURRENT_PAGE_STORAGE_KEY = "expenseCurrentPage";
+
+
+
+const DEFAULT_PAGE_SIZE = 3;
+const DEFAULT_CURRENT_PAGE = 0;
+
+const ALLOWED_PAGE_SIZES = [2, 3, 5, 10, 20, 30, 40];
+
+
+
+
+function getSavedPageSize() {
+    const savedPageSize = parseInt(
+        localStorage.getItem(PAGE_SIZE_STORAGE_KEY),
+        10
+    );
+
+    if (ALLOWED_PAGE_SIZES.includes(savedPageSize)) {
+        return savedPageSize;
+    }
+
+    return DEFAULT_PAGE_SIZE;
+}
+
+
+
+
+function getSavedCurrentPage() {
+    const savedPage = parseInt(
+        localStorage.getItem(CURRENT_PAGE_STORAGE_KEY),
+        10
+    );
+
+    if (!isNaN(savedPage) && savedPage >= 0) {
+        return savedPage;
+    }
+
+    return DEFAULT_CURRENT_PAGE;
+}
+
+
+
+let currentPage = getSavedCurrentPage();
+
+let pageSize = getSavedPageSize();
+
+let totalPages = 1;
+
+let totalExpenses = 0;
+
+
+function saveCurrentPage() {
+    localStorage.setItem(
+        CURRENT_PAGE_STORAGE_KEY,
+        currentPage
+    );
+}
+
+
+function savePageSize() {
+    localStorage.setItem(
+        PAGE_SIZE_STORAGE_KEY,
+        pageSize
+    );
+}
+
+
 axios.interceptors.response.use(
     (response) => response,
+
     (error) => {
-        if (error.response && error.response.status === 401) {
+        if (
+            error.response &&
+            error.response.status === 401
+        ) {
             localStorage.removeItem("token");
+
             window.location.href = "signup.html";
         }
+
         return Promise.reject(error);
     }
 );
 
+
+
 function setupCategorySuggestions() {
-    const descriptionInput = document.getElementById("description");
-    const suggestion = document.getElementById("category-suggestion");
+    const descriptionInput =
+        document.getElementById("description");
 
-    if (!descriptionInput || !suggestion) return;
+    const suggestion =
+        document.getElementById("category-suggestion");
 
-    descriptionInput.addEventListener("keydown", async (e) => {
-        if (e.key !== "Enter") return;
+    if (!descriptionInput || !suggestion) {
+        return;
+    }
 
-        e.preventDefault();
+    descriptionInput.addEventListener(
+        "keydown",
+        async (e) => {
 
-        const description = descriptionInput.value.trim();
-        if (!description) return;
+            if (e.key !== "Enter") {
+                return;
+            }
 
-        const category = await fetchCategorySuggestion(description);
+            e.preventDefault();
 
-        if (category) {
-            suggestion.textContent = `Suggested category: ${category}`;
-            suggestion.hidden = false;
+            const description =
+                descriptionInput.value.trim();
+
+            if (!description) {
+                return;
+            }
+
+            const category =
+                await fetchCategorySuggestion(
+                    description
+                );
+
+            if (category) {
+                suggestion.textContent =
+                    `Suggested category: ${category}`;
+
+                suggestion.hidden = false;
+            }
         }
-    });
+    );
 }
 
-async function fetchCategorySuggestion(description) {
+
+async function fetchCategorySuggestion(
+    description
+) {
     try {
-        const response = await axios.get(ai_URL, {
-            params: { description }
-        });
+
+        const response = await axios.get(
+            ai_URL,
+            {
+                params: {
+                    description
+                }
+            }
+        );
 
         return response.data.category;
 
     } catch (error) {
+
         console.log(error.message);
+
         return null;
     }
 }
 
 
 
-let currentPage = 0;
-let totalPages = 1;
-
 
 async function handleExpenseForm(event) {
+
     event.preventDefault();
 
-    const amount = document.getElementById("amount").value;
-    const description = document.getElementById("description").value;
-    const category = document.getElementById("category").value;
+    const amount =
+        document.getElementById("amount").value;
+
+    const description =
+        document.getElementById("description").value;
+
+    const category =
+        document.getElementById("category").value;
 
     const expenseData = {
         amount,
@@ -69,23 +182,41 @@ async function handleExpenseForm(event) {
         category
     };
 
-    const token = localStorage.getItem("token");
+    const token =
+        localStorage.getItem("token");
 
     try {
-        await axios.post(expense_URL, expenseData, {
-            headers: {
-                Authorization: `Bearer ${token}`
+
+        await axios.post(
+            expense_URL,
+            expenseData,
+            {
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`
+                }
             }
-        });
+        );
 
         event.target.reset();
-        document.getElementById("category-suggestion").hidden = true;
 
-        alert("Expense added successfully!");
+        document.getElementById(
+            "category-suggestion"
+        ).hidden = true;
 
-        await fetchExpenses(0);
+        alert(
+            "Expense added successfully!"
+        );
+
+    
+        currentPage = 0;
+
+        saveCurrentPage();
+
+        await fetchExpenses(currentPage);
 
     } catch (error) {
+
         console.log(error.message);
     }
 }
@@ -93,9 +224,12 @@ async function handleExpenseForm(event) {
 
 
 function createExpenseCard(expense) {
-    const expenseCard = document.createElement("div");
 
-    expenseCard.className = "expense-card";
+    const expenseCard =
+        document.createElement("div");
+
+    expenseCard.className =
+        "expense-card";
 
     expenseCard.innerHTML = `
         <div class="expense-info">
@@ -114,93 +248,244 @@ function createExpenseCard(expense) {
 
         </div>
 
-        <button class="delete-expense-btn">
+        <button
+            class="delete-expense-btn"
+            type="button"
+        >
             Delete
         </button>
     `;
 
     expenseCard
-        .querySelector(".delete-expense-btn")
-        .addEventListener("click", () => {
-            deleteExpense(expense.id);
-        });
+        .querySelector(
+            ".delete-expense-btn"
+        )
+        .addEventListener(
+            "click",
+            () => {
+                deleteExpense(expense.id);
+            }
+        );
 
     return expenseCard;
 }
 
 
-// Replaces the visible list with exactly the current page's expenses.
+
 function renderExpenses(expenses) {
-    const expensesList = document.getElementById("expenses-list");
-    const emptyState = document.getElementById("empty-state");
 
-    expensesList.querySelectorAll(".expense-card").forEach((card) => card.remove());
+    const expensesList =
+        document.getElementById(
+            "expenses-list"
+        );
 
-    if (expenses.length === 0) {
+    const emptyState =
+        document.getElementById(
+            "empty-state"
+        );
+
+    expensesList
+        .querySelectorAll(
+            ".expense-card"
+        )
+        .forEach(
+            (card) => card.remove()
+        );
+
+    if (!expenses || expenses.length === 0) {
+
         emptyState.hidden = false;
+
         return;
     }
+
     emptyState.hidden = true;
 
-    expenses.map(createExpenseCard).forEach((card) => expensesList.appendChild(card));
+    expenses
+        .map(createExpenseCard)
+        .forEach(
+            (card) =>
+                expensesList.appendChild(card)
+        );
 }
+
 
 
 async function deleteExpense(id) {
 
-    const token = localStorage.getItem("token");
+    const token =
+        localStorage.getItem("token");
 
     try {
 
-        await axios.delete(`${expense_URL}/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
+        await axios.delete(
+            `${expense_URL}/${id}`,
+            {
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`
+                }
             }
-        });
+        );
+
 
         await fetchExpenses(currentPage);
 
     } catch (error) {
+
         console.log(error.message);
     }
 }
 
 
-async function fetchExpenses(page = 0) {
 
-    const token = localStorage.getItem("token");
+
+async function fetchExpenses(
+    page = currentPage
+) {
+
+    const token =
+        localStorage.getItem("token");
+
+    // Make sure page is valid
+    page = Math.max(
+        parseInt(page, 10) || 0,
+        0
+    );
 
     try {
 
-        const response = await axios.get(expense_URL, {
-            params: { page },
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
+        const response =
+            await axios.get(
+                expense_URL,
+                {
+                    params: {
+                        page: page,
+                        pageSize: pageSize
+                    },
 
-        currentPage = response.data.currentPage;
-        totalPages = response.data.totalPages;
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`
+                    }
+                }
+            );
 
-        renderExpenses(response.data.expenses);
-        renderPagination(); // defined in pagination.js
+
+        currentPage =
+            response.data.currentPage;
+
+        totalPages =
+            response.data.totalPages;
+
+        totalExpenses =
+            response.data.totalExpenses;
+
+        pageSize =
+            response.data.pageSize;
+
+        
+
+        saveCurrentPage();
+
+
+        savePageSize();
+
+        updatePageSizeSelect();
+
+        renderExpenses(
+            response.data.expenses
+        );
+
+
+        renderPagination();
 
     } catch (error) {
+
         console.log(error.message);
     }
 }
 
 
+function handlePageSizeChange(event) {
 
-document.addEventListener("DOMContentLoaded", () => {
+    const newPageSize =
+        parseInt(
+            event.target.value,
+            10
+        );
 
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-        window.location.href = "signup.html";
+    if (
+        !ALLOWED_PAGE_SIZES.includes(
+            newPageSize
+        )
+    ) {
         return;
     }
 
-    fetchExpenses(0);
-    setupCategorySuggestions();
-});
+    pageSize = newPageSize;
+
+    savePageSize();
+
+    currentPage = 0;
+
+    saveCurrentPage();
+
+    fetchExpenses(currentPage);
+}
+
+
+
+function updatePageSizeSelect() {
+
+    const pageSizeSelect =
+        document.getElementById(
+            "page-size-select"
+        );
+
+    if (!pageSizeSelect) {
+        return;
+    }
+
+    pageSizeSelect.value =
+        String(pageSize);
+}
+
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const token =
+            localStorage.getItem("token");
+
+        if (!token) {
+
+            window.location.href =
+                "signup.html";
+
+            return;
+        }
+
+
+        const pageSizeSelect =
+            document.getElementById(
+                "page-size-select"
+            );
+
+        if (pageSizeSelect) {
+
+            pageSizeSelect.value =
+                String(pageSize);
+
+            pageSizeSelect.addEventListener(
+                "change",
+                handlePageSizeChange
+            );
+        }
+
+        fetchExpenses(currentPage);
+        setupCategorySuggestions();
+    }
+);

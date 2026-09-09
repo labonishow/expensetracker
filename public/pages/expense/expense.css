@@ -556,7 +556,62 @@ body {
     font-style: italic;
     margin-top: 8px;
 }
-.pagination{
+/* =====================================================
+   PAGINATION WRAPPER
+===================================================== */
+
+.pagination-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 30px;
+  padding: 15px 20px;
+  border-top: 1px solid #ddd;
+}
+
+
+/* =====================================================
+   ROWS PER PAGE
+===================================================== */
+
+.rows-per-page {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+.rows-per-page label {
+  font-size: 18px;
+  color: #222;
+  white-space: nowrap;
+}
+
+
+#page-size {
+  min-width: 75px;
+  height: 40px;
+  padding: 5px 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: white;
+  cursor: pointer;
+}
+
+
+.pagination-controls {
     display: flex;
-    justify-content: center;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.pagination-controls label {
+    font-weight: 500;
+}
+
+.page-size-select {
+    width: 90px;
 }

@@ -61,33 +61,88 @@ const createExpense = async (req, res) => {
 };
 
 
-// GET EXPENSES (paginated - ?page=0 is the first page, 3 per page)
-const PAGE_SIZE = 3;
+
+const DEFAULT_PAGE_SIZE = 3;
+
+const ALLOWED_PAGE_SIZES = [2, 3, 5, 10, 20, 30, 40];
 
 const getExpenses = async (req, res) => {
     try {
-        const page = Math.max(parseInt(req.query.page, 10) || 0, 0);
-        const offset = page * PAGE_SIZE;
+        
+        const page = Math.max(
+            parseInt(req.query.page, 10) || 0,
+            0
+        );
 
-        const { rows: expenses, count: totalExpenses } =
-            await Expense.findAndCountAll({
+       
+        let pageSize =
+            parseInt(req.query.pageSize, 10) || DEFAULT_PAGE_SIZE;
+
+        // Only allow the predefined page sizes
+        if (!ALLOWED_PAGE_SIZES.includes(pageSize)) {
+            pageSize = DEFAULT_PAGE_SIZE;
+        }
+
+       
+        const offset = page * pageSize;
+
+        const {
+            rows: expenses,
+            count: totalExpenses
+        } = await Expense.findAndCountAll({
+            where: {
+                userId: req.user.id
+            },
+            order: [["createdAt", "DESC"]],
+            limit: pageSize,
+            offset
+        });
+
+        
+        const totalPages = Math.max(
+            Math.ceil(totalExpenses / pageSize),
+            1
+        );
+
+    
+        const validPage = Math.min(
+            page,
+            totalPages - 1
+        );
+
+    
+        let finalExpenses = expenses;
+
+        if (validPage !== page) {
+            const result = await Expense.findAndCountAll({
                 where: {
                     userId: req.user.id
                 },
                 order: [["createdAt", "DESC"]],
-                limit: PAGE_SIZE,
-                offset
+                limit: pageSize,
+                offset: validPage * pageSize
             });
+
+            finalExpenses = result.rows;
+        }
 
         res.status(200).json({
             success: true,
-            expenses,
-            currentPage: page,
-            totalPages: Math.max(Math.ceil(totalExpenses / PAGE_SIZE), 1),
-            totalExpenses
+
+            expenses: finalExpenses,
+
+            currentPage: validPage,
+
+            totalPages,
+
+            totalExpenses,
+
+            pageSize
         });
 
     } catch (error) {
+        console.error(error);
+
         res.status(500).json({
             success: false,
             message: "Failed to fetch expenses",
@@ -95,7 +150,6 @@ const getExpenses = async (req, res) => {
         });
     }
 };
-
 
 // DELETE EXPENSE
 const deleteExpense = async (req, res) => {
