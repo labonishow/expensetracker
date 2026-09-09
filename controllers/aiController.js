@@ -12,7 +12,7 @@ async function callGemini(prompt) {
         contents: prompt,
         config: {
             thinkingConfig: { thinkingBudget: 0 },
-            maxOutputTokens: 10
+            maxOutputTokens: 20
         }
     });
 }
@@ -31,7 +31,6 @@ const getCategorySuggestion = async (req, res) => {
         try {
             response = await callGemini(prompt);
         } catch (err) {
-            
             if (err.status === 503) {
                 await new Promise((resolve) => setTimeout(resolve, 800));
                 response = await callGemini(prompt);
@@ -40,7 +39,7 @@ const getCategorySuggestion = async (req, res) => {
             }
         }
 
-        const category = response.text.trim();
+        const category = (response.text || "").trim() || "Other";
 
         res.status(200).json({
             success: true,
@@ -48,7 +47,7 @@ const getCategorySuggestion = async (req, res) => {
         });
 
     } catch (err) {
-        console.log(err);
+        console.log("AI suggestion error:", err.message || err);
         if (err.status === 503) {
             return res.status(200).json({
                 success: true,

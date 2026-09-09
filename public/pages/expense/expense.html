@@ -48,6 +48,19 @@
                 <i class="bi bi-trophy-fill"></i>
                 <span>Leaderboard</span>
               </button>
+
+              <button
+                type="button"
+                id="reports-btn"
+                class="reports-btn"
+                title="View Reports"
+                data-bs-toggle="modal"
+                data-bs-target="#reportsModal"
+                disabled
+              >
+                <i class="bi bi-bar-chart-fill"></i>
+                <span>Reports</span>
+              </button>
             </div>
           </div>
         </div>
@@ -182,6 +195,54 @@
       </div>
     </div>
 
+    <!-- Reports Modal -->
+    <div
+      class="modal fade"
+      id="reportsModal"
+      tabindex="-1"
+      aria-labelledby="reportsModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="reportsModalLabel">
+              <i class="bi bi-bar-chart-fill"></i> Day to Day Expenses
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="report-toolbar">
+              <div class="report-view-toggle" role="group">
+                <button type="button" class="report-view-btn active" data-view="daily">Daily</button>
+                <button type="button" class="report-view-btn" data-view="weekly">Weekly</button>
+                <button type="button" class="report-view-btn" data-view="monthly">Monthly</button>
+              </div>
+
+              <button
+                type="button"
+                id="download-report-btn"
+                class="download-report-btn"
+                title="Premium feature"
+                disabled
+              >
+                <i class="bi bi-download"></i> Download
+              </button>
+            </div>
+
+            <div id="report-table-container" class="report-table-container">
+              <p class="empty-state">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="
 https://cdn.jsdelivr.net/npm/axios@1.20.0/dist/axios.min.js
 "></script>
@@ -193,5 +254,6 @@ https://cdn.jsdelivr.net/npm/axios@1.20.0/dist/axios.min.js
     <script src="expense.js"></script>
     <script src="premium.js"></script>
     <script src="leaderboard.js"></script>
+    <script src="report.js"></script>
   </body>
 </html>

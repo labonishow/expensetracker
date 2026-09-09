@@ -2,10 +2,13 @@ const cashfree = Cashfree({
   mode: "sandbox",
 });
 
-
+// Shared flag other scripts (e.g. leaderboard.js) can check without an
+// extra network call. This is only a UX shortcut — the real enforcement
+// happens on the backend, since this can be stale or tampered with.
 window.isPremiumUser = false;
 
-
+// Keeps the fixed header's offset in sync with its real rendered height,
+// since the premium banner can appear/disappear and change that height.
 function syncHeaderHeight() {
   const header = document.querySelector(".tracker-header");
   if (header) {
@@ -16,12 +19,18 @@ function syncHeaderHeight() {
   }
 }
 
-
+// Single source of truth for reflecting premium status in the UI.
 function showPremiumUI(isPremium, name) {
   window.isPremiumUser = isPremium;
 
   const leaderboardBtn = document.getElementById("leaderboard-btn");
   if (leaderboardBtn) leaderboardBtn.disabled = isPremium !== true;
+
+  const reportsBtn = document.getElementById("reports-btn");
+  if (reportsBtn) reportsBtn.disabled = isPremium !== true;
+
+  const downloadReportBtn = document.getElementById("download-report-btn");
+  if (downloadReportBtn) downloadReportBtn.disabled = isPremium !== true;
 
   const banner = document.getElementById("premium-banner");
   const nameEl = document.getElementById("premium-user-name");
@@ -40,6 +49,9 @@ function showPremiumUI(isPremium, name) {
 
 syncHeaderHeight();
 }
+// Asks the backend (source of truth in the DB) whether the current user
+// is premium. Runs on every page load / after login, so the banner
+// survives refreshes and re-logins instead of relying on local state.
 async function checkPremiumStatus() {
   const token = localStorage.getItem("token");
   if (!token) return;
@@ -104,6 +116,22 @@ document.getElementById("premium-btn").addEventListener("click", async () => {
     // 4. Handle error
     if (result.error) {
       console.error("Payment error:", result.error);
+
+      // Ask the backend to fetch the real status from Cashfree and save
+      // it - without this, the DB row stays stuck on "Pending" forever
+      // since this is the only branch where a failed/cancelled payment
+      // would otherwise skip the status-check call entirely.
+      try {
+        await fetch(`http://localhost:3000/payment/status/${orderId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      } catch (statusError) {
+        console.error("Failed to sync failed payment status:", statusError);
+      }
+
       alert("Payment was cancelled or failed.");
       return;
     }

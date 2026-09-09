@@ -1,23 +1,28 @@
 const expense_URL = "/expense";
 const ai_URL = "/ai/suggest-category";
+axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem("token");
+            window.location.href = "signup.html";
+        }
+        return Promise.reject(error);
+    }
+);
 
-
-// CATEGORY SUGGESTION
 function setupCategorySuggestions() {
-
     const descriptionInput = document.getElementById("description");
     const suggestion = document.getElementById("category-suggestion");
 
     if (!descriptionInput || !suggestion) return;
 
     descriptionInput.addEventListener("keydown", async (e) => {
-
         if (e.key !== "Enter") return;
 
         e.preventDefault();
 
         const description = descriptionInput.value.trim();
-
         if (!description) return;
 
         const category = await fetchCategorySuggestion(description);
@@ -29,32 +34,22 @@ function setupCategorySuggestions() {
     });
 }
 
-
-// GET AI CATEGORY SUGGESTION
 async function fetchCategorySuggestion(description) {
-
     try {
-
         const response = await axios.get(ai_URL, {
-            params: {
-                description: description
-            }
+            params: { description }
         });
 
         return response.data.category;
 
     } catch (error) {
-
         console.log(error.message);
-
         return null;
     }
 }
 
 
-// CREATE EXPENSE
 async function handleExpenseForm(event) {
-
     event.preventDefault();
 
     const amount = document.getElementById("amount").value;
@@ -70,50 +65,36 @@ async function handleExpenseForm(event) {
     const token = localStorage.getItem("token");
 
     try {
-
-        const response = await axios.post(
-            expense_URL,
-            expenseData,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+        const response = await axios.post(expense_URL, expenseData, {
+            headers: {
+                Authorization: `Bearer ${token}`
             }
-        );
+        });
 
         showExpense(response.data.expense);
 
         event.target.reset();
-
-        document.getElementById(
-            "category-suggestion"
-        ).hidden = true;
+        document.getElementById("category-suggestion").hidden = true;
 
         alert("Expense added successfully!");
 
     } catch (error) {
-
         console.log(error.message);
-
     }
 }
 
 
-// SHOW EXPENSE
 function showExpense(expense) {
 
-    const expensesList =
-        document.getElementById("expenses-list");
+    const expensesList = document.getElementById("expenses-list");
 
-    const emptyState =
-        document.getElementById("empty-state");
+    const emptyState = document.getElementById("empty-state");
 
     if (emptyState) {
         emptyState.remove();
     }
 
-    const expenseCard =
-        document.createElement("div");
+    const expenseCard = document.createElement("div");
 
     expenseCard.className = "expense-card";
 
@@ -141,87 +122,66 @@ function showExpense(expense) {
 
     expenseCard
         .querySelector(".delete-expense-btn")
-        .addEventListener("click", async () => {
-
-            await deleteExpense(
-                expense.id,
-                expenseCard
-            );
-
+        .addEventListener("click", () => {
+            deleteExpense(expense.id, expenseCard);
         });
 
     expensesList.appendChild(expenseCard);
 }
 
 
-// DELETE EXPENSE
+
 async function deleteExpense(id, expenseCard) {
 
     const token = localStorage.getItem("token");
 
     try {
 
-        await axios.delete(
-            `${expense_URL}/${id}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+        await axios.delete(`${expense_URL}/${id}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
             }
-        );
+        });
 
         expenseCard.remove();
 
     } catch (error) {
-
         console.log(error.message);
-
     }
 }
 
 
-// LOAD EXPENSES
+
 async function loadExpenses() {
 
     const token = localStorage.getItem("token");
 
     try {
 
-        const response = await axios.get(
-            expense_URL,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+        const response = await axios.get(expense_URL, {
+            headers: {
+                Authorization: `Bearer ${token}`
             }
-        );
+        });
 
         response.data.expenses.forEach(showExpense);
 
     } catch (error) {
-
         console.log(error.message);
-
     }
 }
 
 
-// PAGE LOAD
-document.addEventListener(
-    "DOMContentLoaded",
-    async () => {
 
-        const token = localStorage.getItem("token");
+document.addEventListener("DOMContentLoaded", () => {
 
-        if (!token) {
+    const token = localStorage.getItem("token");
 
-            window.location.href = "signup.html";
-
-            return;
-        }
-
-        await loadExpenses();
-
-        setupCategorySuggestions();
+    if (!token) {
+        window.location.href = "signup.html";
+        return;
     }
-);
+
+    loadExpenses();
+    setupCategorySuggestions();
+});
