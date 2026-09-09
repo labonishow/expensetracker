@@ -44,6 +44,8 @@ body {
     border-radius: 18px;
     overflow: hidden;
     box-shadow: 0 30px 60px -20px rgba(30, 20, 60, 0.4);
+    margin-top: -25px;
+    margin-bottom: -50px;
 }
 
 

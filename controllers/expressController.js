@@ -8,12 +8,13 @@ const createExpense = async (req, res) => {
     const t = await sequelize.transaction();
 
     try {
-        const { amount, description, category } = req.body;
+        const { amount, description, category,note } = req.body;
         const expense = await Expense.create(
             {
                 amount,
                 description,
                 category,
+                note,
                 userId: req.user.id
             },
             {

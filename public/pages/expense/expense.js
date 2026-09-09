@@ -1,52 +1,39 @@
 const expense_URL = "/expense";
 const ai_URL = "/ai/suggest-category";
 
-
-
-
 const PAGE_SIZE_STORAGE_KEY = "expensePageSize";
 const CURRENT_PAGE_STORAGE_KEY = "expenseCurrentPage";
-
-
 
 const DEFAULT_PAGE_SIZE = 3;
 const DEFAULT_CURRENT_PAGE = 0;
 
 const ALLOWED_PAGE_SIZES = [2, 3, 5, 10, 20, 30, 40];
 
-
-
-
 function getSavedPageSize() {
-    const savedPageSize = parseInt(
-        localStorage.getItem(PAGE_SIZE_STORAGE_KEY),
-        10
-    );
+  const savedPageSize = parseInt(
+    localStorage.getItem(PAGE_SIZE_STORAGE_KEY),
+    10,
+  );
 
-    if (ALLOWED_PAGE_SIZES.includes(savedPageSize)) {
-        return savedPageSize;
-    }
+  if (ALLOWED_PAGE_SIZES.includes(savedPageSize)) {
+    return savedPageSize;
+  }
 
-    return DEFAULT_PAGE_SIZE;
+  return DEFAULT_PAGE_SIZE;
 }
-
-
-
 
 function getSavedCurrentPage() {
-    const savedPage = parseInt(
-        localStorage.getItem(CURRENT_PAGE_STORAGE_KEY),
-        10
-    );
+  const savedPage = parseInt(
+    localStorage.getItem(CURRENT_PAGE_STORAGE_KEY),
+    10,
+  );
 
-    if (!isNaN(savedPage) && savedPage >= 0) {
-        return savedPage;
-    }
+  if (!isNaN(savedPage) && savedPage >= 0) {
+    return savedPage;
+  }
 
-    return DEFAULT_CURRENT_PAGE;
+  return DEFAULT_CURRENT_PAGE;
 }
-
-
 
 let currentPage = getSavedCurrentPage();
 
@@ -56,182 +43,124 @@ let totalPages = 1;
 
 let totalExpenses = 0;
 
-
 function saveCurrentPage() {
-    localStorage.setItem(
-        CURRENT_PAGE_STORAGE_KEY,
-        currentPage
-    );
+  localStorage.setItem(CURRENT_PAGE_STORAGE_KEY, currentPage);
 }
-
 
 function savePageSize() {
-    localStorage.setItem(
-        PAGE_SIZE_STORAGE_KEY,
-        pageSize
-    );
+  localStorage.setItem(PAGE_SIZE_STORAGE_KEY, pageSize);
 }
-
 
 axios.interceptors.response.use(
-    (response) => response,
+  (response) => response,
 
-    (error) => {
-        if (
-            error.response &&
-            error.response.status === 401
-        ) {
-            localStorage.removeItem("token");
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem("token");
 
-            window.location.href = "signup.html";
-        }
-
-        return Promise.reject(error);
+      window.location.href = "signup.html";
     }
+
+    return Promise.reject(error);
+  },
 );
 
-
-
 function setupCategorySuggestions() {
-    const descriptionInput =
-        document.getElementById("description");
+  const descriptionInput = document.getElementById("description");
 
-    const suggestion =
-        document.getElementById("category-suggestion");
+  const suggestion = document.getElementById("category-suggestion");
 
-    if (!descriptionInput || !suggestion) {
-        return;
+  if (!descriptionInput || !suggestion) {
+    return;
+  }
+
+  descriptionInput.addEventListener("keydown", async (e) => {
+    if (e.key !== "Enter") {
+      return;
     }
 
-    descriptionInput.addEventListener(
-        "keydown",
-        async (e) => {
+    e.preventDefault();
 
-            if (e.key !== "Enter") {
-                return;
-            }
+    const description = descriptionInput.value.trim();
 
-            e.preventDefault();
-
-            const description =
-                descriptionInput.value.trim();
-
-            if (!description) {
-                return;
-            }
-
-            const category =
-                await fetchCategorySuggestion(
-                    description
-                );
-
-            if (category) {
-                suggestion.textContent =
-                    `Suggested category: ${category}`;
-
-                suggestion.hidden = false;
-            }
-        }
-    );
-}
-
-
-async function fetchCategorySuggestion(
-    description
-) {
-    try {
-
-        const response = await axios.get(
-            ai_URL,
-            {
-                params: {
-                    description
-                }
-            }
-        );
-
-        return response.data.category;
-
-    } catch (error) {
-
-        console.log(error.message);
-
-        return null;
+    if (!description) {
+      return;
     }
+
+    const category = await fetchCategorySuggestion(description);
+
+    if (category) {
+      suggestion.textContent = `Suggested category: ${category}`;
+
+      suggestion.hidden = false;
+    }
+  });
 }
 
+async function fetchCategorySuggestion(description) {
+  try {
+    const response = await axios.get(ai_URL, {
+      params: {
+        description,
+      },
+    });
 
+    return response.data.category;
+  } catch (error) {
+    console.log(error.message);
 
+    return null;
+  }
+}
 
 async function handleExpenseForm(event) {
+  event.preventDefault();
 
-    event.preventDefault();
+  const amount = document.getElementById("amount").value;
 
-    const amount =
-        document.getElementById("amount").value;
+  const description = document.getElementById("description").value;
 
-    const description =
-        document.getElementById("description").value;
+  const category = document.getElementById("category").value;
+  const note = document.getElementById("note").value;
 
-    const category =
-        document.getElementById("category").value;
+  const expenseData = {
+    amount,
+    description,
+    category,
+    note,
+  };
 
-    const expenseData = {
-        amount,
-        description,
-        category
-    };
+  const token = localStorage.getItem("token");
 
-    const token =
-        localStorage.getItem("token");
+  try {
+    await axios.post(expense_URL, expenseData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-    try {
+    event.target.reset();
 
-        await axios.post(
-            expense_URL,
-            expenseData,
-            {
-                headers: {
-                    Authorization:
-                        `Bearer ${token}`
-                }
-            }
-        );
+    document.getElementById("category-suggestion").hidden = true;
 
-        event.target.reset();
+    alert("Expense added successfully!");
 
-        document.getElementById(
-            "category-suggestion"
-        ).hidden = true;
+    currentPage = 0;
 
-        alert(
-            "Expense added successfully!"
-        );
+    saveCurrentPage();
 
-    
-        currentPage = 0;
-
-        saveCurrentPage();
-
-        await fetchExpenses(currentPage);
-
-    } catch (error) {
-
-        console.log(error.message);
-    }
+    await fetchExpenses(currentPage);
+  } catch (error) {
+    console.log(error.message);
+  }
 }
 
-
-
 function createExpenseCard(expense) {
+  const expenseCard = document.createElement("div");
 
-    const expenseCard =
-        document.createElement("div");
+  expenseCard.className = "expense-card";
 
-    expenseCard.className =
-        "expense-card";
-
-    expenseCard.innerHTML = `
+  expenseCard.innerHTML = `
         <div class="expense-info">
 
             <p class="expense-amount">
@@ -245,6 +174,9 @@ function createExpenseCard(expense) {
             <p class="expense-category">
                 Category: ${expense.category}
             </p>
+            <p class="expense-note">
+               Note: ${expense.note || "No note"}
+           </p>
 
         </div>
 
@@ -256,236 +188,138 @@ function createExpenseCard(expense) {
         </button>
     `;
 
-    expenseCard
-        .querySelector(
-            ".delete-expense-btn"
-        )
-        .addEventListener(
-            "click",
-            () => {
-                deleteExpense(expense.id);
-            }
-        );
+  expenseCard
+    .querySelector(".delete-expense-btn")
+    .addEventListener("click", () => {
+      deleteExpense(expense.id);
+    });
 
-    return expenseCard;
+  return expenseCard;
 }
-
-
 
 function renderExpenses(expenses) {
+  const expensesList = document.getElementById("expenses-list");
 
-    const expensesList =
-        document.getElementById(
-            "expenses-list"
-        );
+  const emptyState = document.getElementById("empty-state");
 
-    const emptyState =
-        document.getElementById(
-            "empty-state"
-        );
+  expensesList
+    .querySelectorAll(".expense-card")
+    .forEach((card) => card.remove());
 
-    expensesList
-        .querySelectorAll(
-            ".expense-card"
-        )
-        .forEach(
-            (card) => card.remove()
-        );
+  if (!expenses || expenses.length === 0) {
+    emptyState.hidden = false;
 
-    if (!expenses || expenses.length === 0) {
+    return;
+  }
 
-        emptyState.hidden = false;
+  emptyState.hidden = true;
 
-        return;
-    }
-
-    emptyState.hidden = true;
-
-    expenses
-        .map(createExpenseCard)
-        .forEach(
-            (card) =>
-                expensesList.appendChild(card)
-        );
+  expenses
+    .map(createExpenseCard)
+    .forEach((card) => expensesList.appendChild(card));
 }
-
-
 
 async function deleteExpense(id) {
+  const token = localStorage.getItem("token");
 
-    const token =
-        localStorage.getItem("token");
+  try {
+    await axios.delete(`${expense_URL}/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-    try {
-
-        await axios.delete(
-            `${expense_URL}/${id}`,
-            {
-                headers: {
-                    Authorization:
-                        `Bearer ${token}`
-                }
-            }
-        );
-
-
-        await fetchExpenses(currentPage);
-
-    } catch (error) {
-
-        console.log(error.message);
-    }
+    await fetchExpenses(currentPage);
+  } catch (error) {
+    console.log(error.message);
+  }
 }
 
+async function fetchExpenses(page = currentPage) {
+  const token = localStorage.getItem("token");
 
+  // Make sure page is valid
+  page = Math.max(parseInt(page, 10) || 0, 0);
 
+  try {
+    const response = await axios.get(expense_URL, {
+      params: {
+        page: page,
+        pageSize: pageSize,
+      },
 
-async function fetchExpenses(
-    page = currentPage
-) {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-    const token =
-        localStorage.getItem("token");
+    currentPage = response.data.currentPage;
 
-    // Make sure page is valid
-    page = Math.max(
-        parseInt(page, 10) || 0,
-        0
-    );
+    totalPages = response.data.totalPages;
 
-    try {
+    totalExpenses = response.data.totalExpenses;
 
-        const response =
-            await axios.get(
-                expense_URL,
-                {
-                    params: {
-                        page: page,
-                        pageSize: pageSize
-                    },
-
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`
-                    }
-                }
-            );
-
-
-        currentPage =
-            response.data.currentPage;
-
-        totalPages =
-            response.data.totalPages;
-
-        totalExpenses =
-            response.data.totalExpenses;
-
-        pageSize =
-            response.data.pageSize;
-
-        
-
-        saveCurrentPage();
-
-
-        savePageSize();
-
-        updatePageSizeSelect();
-
-        renderExpenses(
-            response.data.expenses
-        );
-
-
-        renderPagination();
-
-    } catch (error) {
-
-        console.log(error.message);
-    }
-}
-
-
-function handlePageSizeChange(event) {
-
-    const newPageSize =
-        parseInt(
-            event.target.value,
-            10
-        );
-
-    if (
-        !ALLOWED_PAGE_SIZES.includes(
-            newPageSize
-        )
-    ) {
-        return;
-    }
-
-    pageSize = newPageSize;
-
-    savePageSize();
-
-    currentPage = 0;
+    pageSize = response.data.pageSize;
 
     saveCurrentPage();
 
-    fetchExpenses(currentPage);
+    savePageSize();
+
+    updatePageSizeSelect();
+
+    renderExpenses(response.data.expenses);
+
+    renderPagination();
+  } catch (error) {
+    console.log(error.message);
+  }
 }
 
+function handlePageSizeChange(event) {
+  const newPageSize = parseInt(event.target.value, 10);
 
+  if (!ALLOWED_PAGE_SIZES.includes(newPageSize)) {
+    return;
+  }
+
+  pageSize = newPageSize;
+
+  savePageSize();
+
+  currentPage = 0;
+
+  saveCurrentPage();
+
+  fetchExpenses(currentPage);
+}
 
 function updatePageSizeSelect() {
+  const pageSizeSelect = document.getElementById("page-size-select");
 
-    const pageSizeSelect =
-        document.getElementById(
-            "page-size-select"
-        );
+  if (!pageSizeSelect) {
+    return;
+  }
 
-    if (!pageSizeSelect) {
-        return;
-    }
-
-    pageSizeSelect.value =
-        String(pageSize);
+  pageSizeSelect.value = String(pageSize);
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  const token = localStorage.getItem("token");
 
+  if (!token) {
+    window.location.href = "signup.html";
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+    return;
+  }
 
-        const token =
-            localStorage.getItem("token");
+  const pageSizeSelect = document.getElementById("page-size-select");
 
-        if (!token) {
+  if (pageSizeSelect) {
+    pageSizeSelect.value = String(pageSize);
 
-            window.location.href =
-                "signup.html";
+    pageSizeSelect.addEventListener("change", handlePageSizeChange);
+  }
 
-            return;
-        }
-
-
-        const pageSizeSelect =
-            document.getElementById(
-                "page-size-select"
-            );
-
-        if (pageSizeSelect) {
-
-            pageSizeSelect.value =
-                String(pageSize);
-
-            pageSizeSelect.addEventListener(
-                "change",
-                handlePageSizeChange
-            );
-        }
-
-        fetchExpenses(currentPage);
-        setupCategorySuggestions();
-    }
-);
+  fetchExpenses(currentPage);
+  setupCategorySuggestions();
+});
