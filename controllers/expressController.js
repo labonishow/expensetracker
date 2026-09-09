@@ -61,18 +61,30 @@ const createExpense = async (req, res) => {
 };
 
 
-// GET EXPENSES
+// GET EXPENSES (paginated - ?page=0 is the first page, 3 per page)
+const PAGE_SIZE = 3;
+
 const getExpenses = async (req, res) => {
     try {
-        const expenses = await Expense.findAll({
-            where: {
-                userId: req.user.id
-            }
-        });
+        const page = Math.max(parseInt(req.query.page, 10) || 0, 0);
+        const offset = page * PAGE_SIZE;
+
+        const { rows: expenses, count: totalExpenses } =
+            await Expense.findAndCountAll({
+                where: {
+                    userId: req.user.id
+                },
+                order: [["createdAt", "DESC"]],
+                limit: PAGE_SIZE,
+                offset
+            });
 
         res.status(200).json({
             success: true,
-            expenses
+            expenses,
+            currentPage: page,
+            totalPages: Math.max(Math.ceil(totalExpenses / PAGE_SIZE), 1),
+            totalExpenses
         });
 
     } catch (error) {

@@ -21,8 +21,6 @@ exports.processPayment = async (req, res) => {
     const orderId = "ORDER-" + Date.now();
     const orderAmount = 2000;
     const orderCurrency = "INR";
-    // req.user is set by authMiddleware from the JWT, so the order is
-    // always tied to whoever is actually logged in.
     const customerID = String(req.user.id);
     const customerPhone = "9999999999";
 

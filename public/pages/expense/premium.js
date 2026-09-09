@@ -2,9 +2,6 @@ const cashfree = Cashfree({
   mode: "sandbox",
 });
 
-// Shared flag other scripts (e.g. leaderboard.js) can check without an
-// extra network call. This is only a UX shortcut — the real enforcement
-// happens on the backend, since this can be stale or tampered with.
 window.isPremiumUser = false;
 
 // Keeps the fixed header's offset in sync with its real rendered height,
@@ -117,10 +114,6 @@ document.getElementById("premium-btn").addEventListener("click", async () => {
     if (result.error) {
       console.error("Payment error:", result.error);
 
-      // Ask the backend to fetch the real status from Cashfree and save
-      // it - without this, the DB row stays stuck on "Pending" forever
-      // since this is the only branch where a failed/cancelled payment
-      // would otherwise skip the status-check call entirely.
       try {
         await fetch(`http://localhost:3000/payment/status/${orderId}`, {
           method: "GET",

@@ -1,5 +1,5 @@
 require("dotenv").config();
-require("./models/associations");
+//require("./models/associations");
 
 const express = require("express");
 const path = require("path");

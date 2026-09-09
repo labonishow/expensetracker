@@ -1,5 +1,7 @@
 const expense_URL = "/expense";
 const ai_URL = "/ai/suggest-category";
+
+
 axios.interceptors.response.use(
     (response) => response,
     (error) => {
@@ -49,6 +51,11 @@ async function fetchCategorySuggestion(description) {
 }
 
 
+
+let currentPage = 0;
+let totalPages = 1;
+
+
 async function handleExpenseForm(event) {
     event.preventDefault();
 
@@ -65,18 +72,18 @@ async function handleExpenseForm(event) {
     const token = localStorage.getItem("token");
 
     try {
-        const response = await axios.post(expense_URL, expenseData, {
+        await axios.post(expense_URL, expenseData, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
 
-        showExpense(response.data.expense);
-
         event.target.reset();
         document.getElementById("category-suggestion").hidden = true;
 
         alert("Expense added successfully!");
+
+        await fetchExpenses(0);
 
     } catch (error) {
         console.log(error.message);
@@ -84,16 +91,8 @@ async function handleExpenseForm(event) {
 }
 
 
-function showExpense(expense) {
 
-    const expensesList = document.getElementById("expenses-list");
-
-    const emptyState = document.getElementById("empty-state");
-
-    if (emptyState) {
-        emptyState.remove();
-    }
-
+function createExpenseCard(expense) {
     const expenseCard = document.createElement("div");
 
     expenseCard.className = "expense-card";
@@ -123,15 +122,31 @@ function showExpense(expense) {
     expenseCard
         .querySelector(".delete-expense-btn")
         .addEventListener("click", () => {
-            deleteExpense(expense.id, expenseCard);
+            deleteExpense(expense.id);
         });
 
-    expensesList.appendChild(expenseCard);
+    return expenseCard;
 }
 
 
+// Replaces the visible list with exactly the current page's expenses.
+function renderExpenses(expenses) {
+    const expensesList = document.getElementById("expenses-list");
+    const emptyState = document.getElementById("empty-state");
 
-async function deleteExpense(id, expenseCard) {
+    expensesList.querySelectorAll(".expense-card").forEach((card) => card.remove());
+
+    if (expenses.length === 0) {
+        emptyState.hidden = false;
+        return;
+    }
+    emptyState.hidden = true;
+
+    expenses.map(createExpenseCard).forEach((card) => expensesList.appendChild(card));
+}
+
+
+async function deleteExpense(id) {
 
     const token = localStorage.getItem("token");
 
@@ -143,7 +158,7 @@ async function deleteExpense(id, expenseCard) {
             }
         });
 
-        expenseCard.remove();
+        await fetchExpenses(currentPage);
 
     } catch (error) {
         console.log(error.message);
@@ -151,20 +166,24 @@ async function deleteExpense(id, expenseCard) {
 }
 
 
-
-async function loadExpenses() {
+async function fetchExpenses(page = 0) {
 
     const token = localStorage.getItem("token");
 
     try {
 
         const response = await axios.get(expense_URL, {
+            params: { page },
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
 
-        response.data.expenses.forEach(showExpense);
+        currentPage = response.data.currentPage;
+        totalPages = response.data.totalPages;
+
+        renderExpenses(response.data.expenses);
+        renderPagination(); // defined in pagination.js
 
     } catch (error) {
         console.log(error.message);
@@ -182,6 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    loadExpenses();
+    fetchExpenses(0);
     setupCategorySuggestions();
 });
