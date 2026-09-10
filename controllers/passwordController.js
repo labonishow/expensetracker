@@ -47,17 +47,22 @@ const forgotPassword = async (req, res) => {
       isActive: true,
     });
 
-    const resetUrl = `http://localhost:3000/password/resetpassword/${requestId}`;
+    const resetUrl = `${process.env.APP_BASE_URL}/password/resetpassword/${requestId}`;
 
     try {
       await tranEmailApi.sendTransacEmail({
         sender: {
           email: process.env.MAIL_SENDER_EMAIL,
+          name: "Expense Tracker",
+        },
+
+        replyTo: {
+          email: user.email,
         },
 
         to: [
           {
-            email: user.email,
+            email: process.env.MAIL_SENDER_EMAIL,
           },
         ],
 
@@ -76,7 +81,10 @@ If you did not request a password reset, you can ignore this email.
 Thank you.`,
       });
     } catch (emailError) {
-      console.log("Email could not be sent:", emailError.message);
+      console.log(
+        "Email could not be sent:",
+        emailError.response?.body || emailError.message,
+      );
 
       return res.status(200).json({
         success: true,
@@ -114,35 +122,24 @@ const showResetPasswordPage = async (req, res) => {
     // UUID doesn't exist OR already used
     if (!request) {
       return res.status(400).send(`
-
                 <!DOCTYPE html>
-
                 <html>
-
                 <head>
                     <title>Invalid Reset Link</title>
                 </head>
-
                 <body>
-
                     <h2>
                         Invalid or expired reset link
                     </h2>
-
                     <p>
                         This password reset link has already been used
                         or does not exist.
                     </p>
-
                 </body>
-
                 </html>
-
             `);
     }
 
-    // Request exists and isActive = true
-    // Show reset password form
 
     return res.sendFile(
       require("path").join(
@@ -161,10 +158,6 @@ const showResetPasswordPage = async (req, res) => {
   }
 };
 
-// --------------------------------------------------
-// RESET PASSWORD
-// POST /password/resetpassword/:requestId
-// --------------------------------------------------
 
 const resetPassword = async (req, res) => {
   try {
@@ -172,12 +165,10 @@ const resetPassword = async (req, res) => {
 
     const password = req.body.password;
 
-    // Validate password
-
+    
     if (!password) {
       return res.status(400).json({
         success: false,
-
         message: "Password is required",
       });
     }
@@ -185,13 +176,11 @@ const resetPassword = async (req, res) => {
     if (password.length < 6) {
       return res.status(400).json({
         success: false,
-
         message: "Password must contain at least 6 characters",
       });
     }
 
-
-    // Find forgot password request
+    
     const request = await ForgotPasswordRequests.findOne({
       where: {
         id: requestId,
@@ -203,42 +192,33 @@ const resetPassword = async (req, res) => {
     if (!request) {
       return res.status(400).json({
         success: false,
-
         message: "Invalid or already used reset link",
       });
     }
 
-    
     // Find user
     const user = await User.findByPk(request.userId);
 
     if (!user) {
       return res.status(404).json({
         success: false,
-
         message: "User not found",
       });
     }
 
     
-    // Encrypt password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Update password
     await user.update({
       password: hashedPassword,
     });
 
- 
-    // Make reset request inactive
-
+    
     await request.update({
       isActive: false,
     });
 
     return res.status(200).json({
       success: true,
-
       message:
         "Password updated successfully. You can now login with your new password.",
     });
@@ -247,7 +227,6 @@ const resetPassword = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-
       message: "Something went wrong while resetting password.",
     });
   }

@@ -4,8 +4,6 @@ const cashfree = Cashfree({
 
 window.isPremiumUser = false;
 
-// Keeps the fixed header's offset in sync with its real rendered height,
-// since the premium banner can appear/disappear and change that height.
 function syncHeaderHeight() {
   const header = document.querySelector(".tracker-header");
   if (header) {
@@ -16,7 +14,6 @@ function syncHeaderHeight() {
   }
 }
 
-// Single source of truth for reflecting premium status in the UI.
 function showPremiumUI(isPremium, name) {
   window.isPremiumUser = isPremium;
 
@@ -35,26 +32,23 @@ function showPremiumUI(isPremium, name) {
   const btn = document.getElementById("premium-btn");
 
   if (banner) banner.hidden = !isPremium;
-  // textContent, not innerHTML — name is user-supplied data.
   if (nameEl) nameEl.textContent = isPremium ? (name || "") : "";
 
   if (isPremium) {
-  if (btn) {
-    btn.classList.add("d-none");
+    if (btn) {
+      btn.classList.add("d-none");
+    }
   }
+
+  syncHeaderHeight();
 }
 
-syncHeaderHeight();
-}
-// Asks the backend (source of truth in the DB) whether the current user
-// is premium. Runs on every page load / after login, so the banner
-// survives refreshes and re-logins instead of relying on local state.
 async function checkPremiumStatus() {
   const token = localStorage.getItem("token");
   if (!token) return;
 
   try {
-    const response = await fetch("http://localhost:3000/payment/premium-status", {
+    const response = await fetch(`/payment/premium-status`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -79,8 +73,7 @@ document.getElementById("premium-btn").addEventListener("click", async () => {
   const token = localStorage.getItem("token");
 
   try {
-    // 1. Create payment order from backend
-    const response = await fetch("http://localhost:3000/payment/pay", {
+    const response = await fetch(`/payment/pay`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -101,21 +94,18 @@ document.getElementById("premium-btn").addEventListener("click", async () => {
       throw new Error("Payment session ID not received");
     }
 
-    // 2. Cashfree checkout options
     const checkoutOptions = {
       paymentSessionId: paymentSessionId,
       redirectTarget: "_modal",
     };
 
-    // 3. Open Cashfree payment modal
     const result = await cashfree.checkout(checkoutOptions);
 
-    // 4. Handle error
     if (result.error) {
       console.error("Payment error:", result.error);
 
       try {
-        await fetch(`http://localhost:3000/payment/status/${orderId}`, {
+        await fetch(`/payment/status/${orderId}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -129,20 +119,17 @@ document.getElementById("premium-btn").addEventListener("click", async () => {
       return;
     }
 
-    // 5. Handle redirect
     if (result.redirect) {
       console.log("Customer redirected for payment completion.");
       return;
     }
 
-    // 6. Payment submitted
     if (result.paymentDetails) {
       console.log("Payment submitted");
       console.log(result.paymentDetails);
 
-      // 7. Check payment status from backend
       const statusResponse = await fetch(
-        `http://localhost:3000/payment/status/${orderId}`,
+        `/payment/status/${orderId}`,
         {
           method: "GET",
           headers: {
@@ -159,7 +146,6 @@ document.getElementById("premium-btn").addEventListener("click", async () => {
 
       console.log("Payment status:", statusData);
 
-      // The backend reports "Success" / "Pending" / "Failure"
       if (statusData.orderStatus === "Success") {
         alert("Premium membership purchased successfully!");
         await checkPremiumStatus();

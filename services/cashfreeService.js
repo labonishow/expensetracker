@@ -1,3 +1,4 @@
+require("dotenv").config();
 const { Cashfree, CFEnvironment } = require("cashfree-pg");
 
 const cashfree = new Cashfree(
@@ -31,7 +32,7 @@ exports.createOrder = async (
 
       order_meta: {
         return_url:
-          "http://localhost:3000/payment/return?order_id={order_id}",
+          `${process.env.APP_BASE_URL}/payment/return?order_id={order_id}`,
 
         payment_methods: "cc,dc,upi",
       },

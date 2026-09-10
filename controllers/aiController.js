@@ -11,8 +11,7 @@ async function callGemini(prompt) {
         model: "gemini-3.8-flash",
         contents: prompt,
         config: {
-            thinkingConfig: { thinkingBudget: 0 },
-            maxOutputTokens: 20
+            thinkingConfig: { thinkingBudget: 0 }
         }
     });
 }

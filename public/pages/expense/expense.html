@@ -23,7 +23,8 @@
       <div class="tracker-card">
         <div class="tracker-header">
           <p id="premium-banner" class="premium-banner" hidden>
-            <i class="bi bi-gem"></i> Welcome <span id="premium-user-name"></span><br />
+            <i class="bi bi-gem"></i> Welcome
+            <span id="premium-user-name"></span><br />
             Thank you for being a Prime Member!
           </p>
           <div class="tracker-header-top">
@@ -64,26 +65,19 @@
             </div>
           </div>
         </div>
-       <div class="pagination-controls">
+        <div class="pagination-controls">
+          <label for="page-size-select"> Expenses per page: </label>
 
-  <label for="page-size-select">
-    Expenses per page:
-  </label>
-
-  <select
-    id="page-size-select"
-    class="form-select page-size-select"
-  >
-    <option value="2">2</option>
-    <option value="3">3</option>
-    <option value="5">5</option>
-    <option value="10">10</option>
-    <option value="20">20</option>
-    <option value="30">30</option>
-    <option value="40">40</option>
-  </select>
-
-</div>
+          <select id="page-size-select" class="form-select page-size-select">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+            <option value="40">40</option>
+          </select>
+        </div>
         <div id="expenses-list" class="expenses-list">
           <p id="empty-state" class="empty-state">
             No expenses yet. Tap + to add one.
@@ -151,13 +145,15 @@
                   placeholder="Enter description"
                   required
                 />
-                <small id="category-suggestion" class="category-hint" hidden></small>
+                <small
+                  id="category-suggestion"
+                  class="category-hint"
+                  hidden
+                ></small>
               </div>
 
               <div class="mb-3">
-                <label for="category" class="field-label"
-                  >Category</label
-                >
+                <label for="category" class="field-label">Category</label>
                 <input
                   type="text"
                   id="category"
@@ -167,18 +163,16 @@
                 />
               </div>
               <div class="mb-3">
-    <label for="note" class="field-label">
-        Note
-    </label>
+                <label for="note" class="field-label"> Note </label>
 
-    <input
-        type="text"
-        id="note"
-        class="field-input"
-        placeholder="Enter a short note"
-        maxlength="255"
-    />
-</div>
+                <input
+                  type="text"
+                  id="note"
+                  class="field-input"
+                  placeholder="Enter a short note"
+                  maxlength="255"
+                />
+              </div>
 
               <div class="row g-2">
                 <div class="col">
@@ -253,9 +247,27 @@
           <div class="modal-body">
             <div class="report-toolbar">
               <div class="report-view-toggle" role="group">
-                <button type="button" class="report-view-btn active" data-view="daily">Daily</button>
-                <button type="button" class="report-view-btn" data-view="weekly">Weekly</button>
-                <button type="button" class="report-view-btn" data-view="monthly">Monthly</button>
+                <button
+                  type="button"
+                  class="report-view-btn active"
+                  data-view="daily"
+                >
+                  Daily
+                </button>
+                <button
+                  type="button"
+                  class="report-view-btn"
+                  data-view="weekly"
+                >
+                  Weekly
+                </button>
+                <button
+                  type="button"
+                  class="report-view-btn"
+                  data-view="monthly"
+                >
+                  Monthly
+                </button>
               </div>
 
               <button
@@ -290,6 +302,5 @@ https://cdn.jsdelivr.net/npm/axios@1.20.0/dist/axios.min.js
     <script src="leaderboard.js"></script>
     <script src="pagination.js"></script>
     <script src="report.js"></script>
-
   </body>
 </html>

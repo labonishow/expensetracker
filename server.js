@@ -1,8 +1,7 @@
 require("dotenv").config();
-//require("./models/associations");
-
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const sequelize = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
 const expenseRoutes = require("./routes/expressRoutes");
@@ -10,7 +9,8 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const leaderboardRoutes = require("./routes/leaderboardRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const passwordRoutes = require("./routes/passwordRoutes");
-
+const compression = require('compression');
+const morgan = require('morgan')
 const app = express();
 
 app.use(express.json());
@@ -21,7 +21,9 @@ app.use("/payment", paymentRoutes);
 app.use("/premium", leaderboardRoutes);
 app.use("/ai", aiRoutes);
 app.use("/password", passwordRoutes);
-
+const accessLogStream = fs.createWriteStream(path.join(__dirname,'access.log'),{flags:'a'});
+app.use(compression());
+app.use(morgan('combined',{stream:accessLogStream}));
 app.use(
   "/password",
   express.static(path.join(__dirname, "public", "pages", "password")),
@@ -30,7 +32,7 @@ app.use(express.static(path.join(__dirname, "public", "pages", "expense")));
 
 app.use(express.static(path.join(__dirname, "public", "pages", "signup")));
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const startServer = async () => {
   try {
     await sequelize.authenticate();
